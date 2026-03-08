@@ -39,7 +39,6 @@ const Index = () => {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [fetchLimit, setFetchLimit] = useState<string>("");
   const [fetchPopoverOpen, setFetchPopoverOpen] = useState(false);
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
 
   const handlePasteLink = async () => {
     if (!linkInput.trim()) return;
