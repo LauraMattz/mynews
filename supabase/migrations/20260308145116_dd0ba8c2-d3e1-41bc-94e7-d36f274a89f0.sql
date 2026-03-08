@@ -1,0 +1,1 @@
+ALTER TABLE public.articles ADD COLUMN sent_to_newsletter boolean NOT NULL DEFAULT false;

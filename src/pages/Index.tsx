@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useArticles } from "@/hooks/useArticles";
 import { TopicManager } from "@/components/TopicManager";
 import { FeedManager } from "@/components/FeedManager";
@@ -10,9 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Sparkles, Search, Newspaper, Settings2, GitBranch, LayoutDashboard } from "lucide-react";
+import { RefreshCw, Sparkles, Search, Newspaper, Settings2, GitBranch, LayoutDashboard, FileText } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
   const {
     articlesQuery, statsQuery, fetchNews, isFetching, fetchProgress,
     summarizeArticles, isSummarizing, summarizeProgress, vote, softDelete,
@@ -66,6 +68,15 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => navigate("/resumos")}
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Resumos</span>
+              </Button>
               <Button
                 onClick={fetchNews}
                 disabled={isFetching}
