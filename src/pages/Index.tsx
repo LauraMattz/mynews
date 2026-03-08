@@ -83,7 +83,12 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold tracking-tight">NewsFlow</h1>
-                <p className="text-[11px] text-muted-foreground leading-tight">Curadoria inteligente de notícias</p>
+                <p className="text-[11px] text-muted-foreground leading-tight">
+                  Curadoria inteligente de notícias · Feito por{" "}
+                  <a href="https://www.linkedin.com/in/lauramattosc/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    Vibe Code Laura Mattos
+                  </a>
+                </p>
               </div>
             </div>
 
