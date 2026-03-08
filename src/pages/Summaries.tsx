@@ -10,6 +10,7 @@ import {
   ArrowLeft, Sparkles, ExternalLink, Link2, Loader2, Send,
   Calendar, Search, Copy, Check, Trash2,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -219,6 +220,7 @@ export default function Summaries() {
               </p>
             </div>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 
