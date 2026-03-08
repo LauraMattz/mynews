@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.classify-articles]
 verify_jwt = false
+
+[functions.daily-pipeline]
+verify_jwt = false
