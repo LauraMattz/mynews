@@ -188,16 +188,11 @@ export default function Summaries() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 shrink-0" onClick={() => navigate("/")}>
-              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-            <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">Resumos</h1>
-              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                {allArticles.length} resumos · {sentCount} na newsletter
-              </p>
-            </div>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-foreground">Resumos</h1>
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              {allArticles.length} resumos · {sentCount} na newsletter
+            </p>
           </div>
           <ThemeToggle />
         </div>
