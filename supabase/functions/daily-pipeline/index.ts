@@ -41,7 +41,13 @@ serve(async (req) => {
     if (!fetchData.success) throw new Error(fetchData.error);
     log.push(`Fetched ${fetchData.items.length} raw items`);
 
-    // Step 3: Filter with blocklist + relevance
+    // Step 3: Load filter terms from DB
+    const { data: filterTerms } = await supabase.from("filter_terms").select("term, type");
+    const BLOCKLIST_TERMS = (filterTerms || []).filter(t => t.type === "blocklist").map(t => t.term.toLowerCase());
+    const RELEVANCE_TERMS = (filterTerms || []).filter(t => t.type === "relevance").map(t => t.term.toLowerCase());
+    log.push(`Loaded ${BLOCKLIST_TERMS.length} blocklist + ${RELEVANCE_TERMS.length} relevance terms from DB`);
+
+    // Step 4: Filter with blocklist + relevance
     const filtered = fetchData.items.filter((item: any) => {
       const text = `${item.title} ${item.description || ""}`.toLowerCase();
       if (BLOCKLIST_TERMS.some(term => text.includes(term))) return false;
