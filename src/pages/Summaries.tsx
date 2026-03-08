@@ -364,7 +364,7 @@ export default function Summaries() {
                     {/* Summary block with copy */}
                     <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 text-sm text-foreground/90 leading-relaxed relative group">
                       <div className="mb-3 pb-2 border-b border-primary/10">
-                        <p className="font-bold text-foreground">{cleanTitle}</p>
+                        <a href={article.link} target="_blank" rel="noopener noreferrer" className="font-bold text-foreground hover:text-primary transition-colors hover:underline">{cleanTitle}</a>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           (Português, {readTime} min, texto)
                         </p>
