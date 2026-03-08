@@ -31,7 +31,6 @@ const Index = () => {
     approveArticle, rejectArticle,
   } = useArticles();
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("triagem");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [linkInput, setLinkInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
