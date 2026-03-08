@@ -14,7 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      articles: {
+        Row: {
+          created_at: string
+          description: string | null
+          feed_id: string | null
+          fetched_at: string
+          id: string
+          is_deleted: boolean
+          link: string
+          published_at: string | null
+          relevance_score: number
+          source_name: string | null
+          summary: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          feed_id?: string | null
+          fetched_at?: string
+          id?: string
+          is_deleted?: boolean
+          link: string
+          published_at?: string | null
+          relevance_score?: number
+          source_name?: string | null
+          summary?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          feed_id?: string | null
+          fetched_at?: string
+          id?: string
+          is_deleted?: boolean
+          link?: string
+          published_at?: string | null
+          relevance_score?: number
+          source_name?: string | null
+          summary?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articles_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "feeds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feeds: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          topic_id: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          topic_id?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          topic_id?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feeds_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          created_at: string
+          id: string
+          keywords: string[]
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          name?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          vote: number
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          vote: number
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          vote?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: true
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
