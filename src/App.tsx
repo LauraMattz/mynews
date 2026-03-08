@@ -23,15 +23,18 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <DesktopNav />
-          <div className="pb-14 sm:pb-0 sm:ml-48">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/resumos" element={<Summaries />} />
-              <Route path="/insights" element={<Insights />} />
-              <Route path="/sobre" element={<About />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+          <div className="pb-14 sm:pb-0 sm:ml-48 flex flex-col min-h-screen">
+            <div className="flex-1">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/resumos" element={<Summaries />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/sobre" element={<About />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+            <Footer />
           </div>
           <BottomNav />
         </BrowserRouter>
