@@ -241,7 +241,9 @@ export default function Insights() {
                       strokeWidth={2}
                       dot={{ r: 3, fill: "hsl(var(--primary))" }}
                       name="Resumos"
-                    />
+                    >
+                      <LabelList dataKey="count" position="top" style={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} formatter={(v: number) => v > 0 ? v : ""} />
+                    </Line>
                   </LineChart>
                 </ResponsiveContainer>
               </div>
