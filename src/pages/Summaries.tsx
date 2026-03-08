@@ -36,7 +36,7 @@ function CopyButton({ text }: { text: string }) {
     <Button
       variant="ghost"
       size="sm"
-      className="absolute top-2 right-2 h-7 gap-1 text-xs opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+      className="absolute bottom-2 right-2 h-7 gap-1 text-xs opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
       onClick={handleCopy}
     >
       {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
