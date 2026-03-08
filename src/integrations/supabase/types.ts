@@ -117,6 +117,27 @@ export type Database = {
           },
         ]
       }
+      filter_terms: {
+        Row: {
+          created_at: string
+          id: string
+          term: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          term: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          term?: string
+          type?: string
+        }
+        Relationships: []
+      }
       topics: {
         Row: {
           created_at: string
