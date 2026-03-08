@@ -93,14 +93,22 @@ serve(async (req) => {
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
           }
-          // Handle encoding: try to detect charset from content-type header
           const contentType = response.headers.get("content-type") || "";
+          const buffer = await response.arrayBuffer();
+          
+          // Detect encoding from content-type header or XML declaration
           let xml: string;
-          if (contentType.includes("iso-8859-1") || contentType.includes("latin1") || contentType.includes("windows-1252")) {
-            const buffer = await response.arrayBuffer();
+          const probe = new TextDecoder("ascii").decode(buffer.slice(0, 200));
+          const xmlEncodingMatch = probe.match(/encoding=["']([^"']+)["']/i);
+          const declaredEncoding = xmlEncodingMatch?.[1]?.toLowerCase() || "";
+          
+          const isLatin = contentType.includes("iso-8859") || contentType.includes("latin1") || contentType.includes("windows-1252") ||
+            declaredEncoding.includes("iso-8859") || declaredEncoding.includes("latin1") || declaredEncoding.includes("windows-1252");
+          
+          if (isLatin) {
             xml = new TextDecoder("iso-8859-1").decode(buffer);
           } else {
-            xml = await response.text();
+            xml = new TextDecoder("utf-8").decode(buffer);
           }
           return parseRSS(xml, feed.name);
         } catch (e) {
