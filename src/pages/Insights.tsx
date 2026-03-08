@@ -143,8 +143,7 @@ export default function Insights() {
     { label: "Resumos", value: stats.total, icon: FileText, color: "text-primary" },
     { label: "Curtidos", value: stats.liked, icon: ThumbsUp, color: "text-accent" },
     { label: "Newsletter", value: stats.sentNewsletter, icon: Send, color: "text-primary" },
-    { label: "Score IA médio", value: stats.avgScore, icon: Sparkles, color: "text-accent" },
-    { label: "Palavras/resumo", value: stats.avgWords, icon: Clock, color: "text-primary" },
+    { label: "Palavras/resumo", value: stats.avgWords, icon: Clock, color: "text-accent" },
   ];
 
   return (
