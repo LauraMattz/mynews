@@ -3,6 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useCallback } from "react";
 
+// Blocklist: terms that indicate off-topic/commercial content
+const BLOCKLIST_TERMS = [
+  "horóscopo", "horoscopo", "tarot", "signo", "signos", "astrologia",
+  "previsão para os signos", "previsão para os 12 signos",
+  "patrocinado", "publipost", "publieditorial", "branded content",
+  "oferta", "cupom", "desconto exclusivo", "black friday",
+  "compre agora", "link de afiliado", "sorteio",
+  "receita de", "dieta de", "emagreça",
+];
+
 export interface FetchProgress {
   stage: "idle" | "fetching_feeds" | "parsing" | "saving" | "done";
   message: string;
@@ -93,17 +103,23 @@ export function useArticles() {
       setFetchProgress({ stage: "saving", message: `Salvando ${data.items.length} artigos...`, percent: 70 });
 
       // Batch insert - much faster than individual inserts
-      const articlesToInsert = data.items.map((item: any) => {
-        const feed = feeds.find(f => f.name === item.sourceName);
-        return {
-          feed_id: feed?.id || null,
-          title: item.title,
-          link: item.link,
-          description: item.description,
-          source_name: item.sourceName,
-          published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
-        };
-      });
+      // Filter out off-topic/commercial articles using blocklist
+      const articlesToInsert = data.items
+        .filter((item: any) => {
+          const text = `${item.title} ${item.description || ""}`.toLowerCase();
+          return !BLOCKLIST_TERMS.some(term => text.includes(term));
+        })
+        .map((item: any) => {
+          const feed = feeds.find(f => f.name === item.sourceName);
+          return {
+            feed_id: feed?.id || null,
+            title: item.title,
+            link: item.link,
+            description: item.description,
+            source_name: item.sourceName,
+            published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+          };
+        });
 
       // Insert in batches of 50, ignoring duplicates
       let inserted = 0;
