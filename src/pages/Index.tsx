@@ -136,7 +136,7 @@ const Index = () => {
                 <Newspaper className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight truncate">NewsFlow</h1>
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight truncate">MyNews</h1>
                 <p className="text-[10px] sm:text-[11px] text-muted-foreground leading-tight truncate">
                   Curadoria inteligente · <a href="https://www.linkedin.com/in/lauramattosc/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Laura Mattos</a>
                 </p>
