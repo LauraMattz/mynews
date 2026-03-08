@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   RefreshCw, Search, Newspaper, FileText, ThumbsDown,
-  Inbox, SlidersHorizontal, BarChart3,
+  Inbox, SlidersHorizontal, BarChart3, Sparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -183,15 +183,32 @@ const Index = () => {
                 </span>
               </div>
               {selected.size > 0 && (
-                <Button
-                  onClick={handleBulkDiscard}
-                  size="sm"
-                  variant="outline"
-                  className="gap-1 text-xs h-8 text-destructive hover:text-destructive border-destructive/30"
-                >
-                  <ThumbsDown className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Descartar</span> {selected.size}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => {
+                      const ids = Array.from(selected);
+                      summarizeArticles(ids);
+                      setSelected(new Set());
+                      toast({ title: `Gerando resumo de ${ids.length} artigos...` });
+                    }}
+                    size="sm"
+                    variant="outline"
+                    disabled={isSummarizing}
+                    className="gap-1 text-xs h-8 text-primary hover:text-primary border-primary/30"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Resumir</span> {selected.size}
+                  </Button>
+                  <Button
+                    onClick={handleBulkDiscard}
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 text-xs h-8 text-destructive hover:text-destructive border-destructive/30"
+                  >
+                    <ThumbsDown className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Descartar</span> {selected.size}
+                  </Button>
+                </div>
               )}
             </div>
 
