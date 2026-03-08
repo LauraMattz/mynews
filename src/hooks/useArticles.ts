@@ -1,13 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useCallback } from "react";
+
+export interface FetchProgress {
+  stage: "idle" | "fetching_feeds" | "parsing" | "saving" | "done";
+  message: string;
+  percent: number;
+}
+
+export interface SummarizeProgress {
+  stage: "idle" | "loading" | "summarizing" | "saving" | "done";
+  message: string;
+  current: number;
+  total: number;
+}
 
 export function useArticles() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isFetching, setIsFetching] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [fetchProgress, setFetchProgress] = useState<FetchProgress>({ stage: "idle", message: "", percent: 0 });
+  const [summarizeProgress, setSummarizeProgress] = useState<SummarizeProgress>({ stage: "idle", message: "", current: 0, total: 0 });
 
   const articlesQuery = useQuery({
     queryKey: ["articles"],
@@ -18,16 +33,43 @@ export function useArticles() {
         .eq("is_deleted", false)
         .order("relevance_score", { ascending: false })
         .order("published_at", { ascending: false })
-        .limit(100);
+        .limit(200);
       if (error) throw error;
       return data;
     },
   });
 
-  const fetchNews = async () => {
+  const statsQuery = useQuery({
+    queryKey: ["article-stats"],
+    queryFn: async () => {
+      const [
+        { count: totalArticles },
+        { count: summarizedArticles },
+        { count: activeFeeds },
+        { data: avgData },
+      ] = await Promise.all([
+        supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false),
+        supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false).not("summary", "is", null),
+        supabase.from("feeds").select("*", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("articles").select("relevance_score").eq("is_deleted", false).not("relevance_score", "eq", 0),
+      ]);
+      const avgScore = avgData && avgData.length > 0
+        ? avgData.reduce((sum, a) => sum + a.relevance_score, 0) / avgData.length
+        : 0;
+      return {
+        totalArticles: totalArticles || 0,
+        summarizedArticles: summarizedArticles || 0,
+        activeFeeds: activeFeeds || 0,
+        avgRelevanceScore: Math.round(avgScore * 10) / 10,
+        votedArticles: avgData?.length || 0,
+      };
+    },
+  });
+
+  const fetchNews = useCallback(async () => {
     setIsFetching(true);
+    setFetchProgress({ stage: "fetching_feeds", message: "Buscando lista de feeds ativos...", percent: 10 });
     try {
-      // Get active feeds
       const { data: feeds, error: feedsError } = await supabase
         .from("feeds")
         .select("id, url, name")
@@ -39,7 +81,8 @@ export function useArticles() {
         return;
       }
 
-      // Call edge function
+      setFetchProgress({ stage: "parsing", message: `Buscando notícias de ${feeds.length} feeds...`, percent: 30 });
+
       const { data, error } = await supabase.functions.invoke("fetch-news", {
         body: { feeds: feeds.map(f => ({ url: f.url, name: f.name })) },
       });
@@ -47,22 +90,42 @@ export function useArticles() {
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
 
-      // Insert articles (skip duplicates via unique link constraint)
-      let inserted = 0;
-      for (const item of data.items) {
+      setFetchProgress({ stage: "saving", message: `Salvando ${data.items.length} artigos...`, percent: 70 });
+
+      // Batch insert - much faster than individual inserts
+      const articlesToInsert = data.items.map((item: any) => {
         const feed = feeds.find(f => f.name === item.sourceName);
-        const { error: insertError } = await supabase.from("articles").insert({
+        return {
           feed_id: feed?.id || null,
           title: item.title,
           link: item.link,
           description: item.description,
           source_name: item.sourceName,
           published_at: item.pubDate ? new Date(item.pubDate).toISOString() : null,
+        };
+      });
+
+      // Insert in batches of 50, ignoring duplicates
+      let inserted = 0;
+      const batchSize = 50;
+      for (let i = 0; i < articlesToInsert.length; i += batchSize) {
+        const batch = articlesToInsert.slice(i, i + batchSize);
+        const { data: insertedData, error: insertError } = await supabase
+          .from("articles")
+          .upsert(batch, { onConflict: "link", ignoreDuplicates: true })
+          .select("id");
+        if (!insertError && insertedData) inserted += insertedData.length;
+        setFetchProgress({
+          stage: "saving",
+          message: `Salvando artigos... (${Math.min(i + batchSize, articlesToInsert.length)}/${articlesToInsert.length})`,
+          percent: 70 + ((i / articlesToInsert.length) * 25),
         });
-        if (!insertError) inserted++;
       }
 
+      setFetchProgress({ stage: "done", message: "Concluído!", percent: 100 });
+
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["article-stats"] });
       toast({
         title: "Notícias atualizadas!",
         description: `${inserted} novos artigos de ${feeds.length} feeds. ${data.errors?.length || 0} erros.`,
@@ -71,11 +134,13 @@ export function useArticles() {
       toast({ title: "Erro ao buscar notícias", description: e instanceof Error ? e.message : "Erro desconhecido", variant: "destructive" });
     } finally {
       setIsFetching(false);
+      setTimeout(() => setFetchProgress({ stage: "idle", message: "", percent: 0 }), 2000);
     }
-  };
+  }, [queryClient, toast]);
 
-  const summarizeArticles = async (articleIds: string[]) => {
+  const summarizeArticles = useCallback(async (articleIds: string[]) => {
     setIsSummarizing(true);
+    setSummarizeProgress({ stage: "loading", message: "Carregando artigos...", current: 0, total: articleIds.length });
     try {
       const { data: articles } = await supabase
         .from("articles")
@@ -88,6 +153,8 @@ export function useArticles() {
         return;
       }
 
+      setSummarizeProgress({ stage: "summarizing", message: `Gerando resumos com IA...`, current: 0, total: articles.length });
+
       const { data, error } = await supabase.functions.invoke("summarize-news", {
         body: { articles },
       });
@@ -95,20 +162,26 @@ export function useArticles() {
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
 
-      // Update articles with summaries
+      setSummarizeProgress({ stage: "saving", message: "Salvando resumos...", current: data.summaries.length, total: articles.length });
+
+      // Batch update summaries
       for (const s of data.summaries) {
         await supabase.from("articles").update({ summary: s.summary }).eq("id", s.id);
       }
 
+      setSummarizeProgress({ stage: "done", message: "Concluído!", current: data.summaries.length, total: articles.length });
+
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["article-stats"] });
       toast({ title: `${data.summaries.length} resumos gerados!` });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro desconhecido";
       toast({ title: "Erro ao gerar resumos", description: msg, variant: "destructive" });
     } finally {
       setIsSummarizing(false);
+      setTimeout(() => setSummarizeProgress({ stage: "idle", message: "", current: 0, total: 0 }), 2000);
     }
-  };
+  }, [queryClient, toast]);
 
   const vote = useMutation({
     mutationFn: async ({ article_id, voteValue }: { article_id: string; voteValue: 1 | -1 }) => {
@@ -119,6 +192,7 @@ export function useArticles() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["article-stats"] });
     },
   });
 
@@ -129,8 +203,20 @@ export function useArticles() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["article-stats"] });
     },
   });
 
-  return { articlesQuery, fetchNews, isFetching, summarizeArticles, isSummarizing, vote, softDelete };
+  return {
+    articlesQuery,
+    statsQuery,
+    fetchNews,
+    isFetching,
+    fetchProgress,
+    summarizeArticles,
+    isSummarizing,
+    summarizeProgress,
+    vote,
+    softDelete,
+  };
 }
