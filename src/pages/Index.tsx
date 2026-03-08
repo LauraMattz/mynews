@@ -117,7 +117,7 @@ const Index = () => {
           <StatsBar
             activeFeeds={stats.activeFeeds}
             totalArticles={stats.totalArticles}
-            summarizedArticles={stats.summarizedArticles}
+            sentToNewsletter={stats.sentToNewsletter}
             pendingTriage={stats.pendingTriage}
           />
         )}
