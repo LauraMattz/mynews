@@ -33,6 +33,8 @@ interface ArticleCardProps {
 export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummarizing }: ArticleCardProps) {
   const currentVote = article.votes?.vote || 0;
   const topicName = article.feeds?.topics?.name;
+  const cleanTitle = useMemo(() => stripHtml(article.title), [article.title]);
+  const cleanDescription = useMemo(() => article.description ? stripHtml(article.description) : null, [article.description]);
 
   return (
     <Card className="group animate-fade-in hover:shadow-md transition-all duration-200">
