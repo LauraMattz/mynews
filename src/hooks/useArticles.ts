@@ -87,7 +87,7 @@ export function useArticles() {
     },
   });
 
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (limit?: number) => {
     setIsFetching(true);
     setFetchProgress({ stage: "fetching_feeds", message: "Buscando lista de feeds ativos...", percent: 10 });
     try {
