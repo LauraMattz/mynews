@@ -27,6 +27,26 @@ function estimateReadingTime(text: string): number {
   return Math.max(1, Math.ceil(words / 200));
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="absolute top-2 right-2 h-7 gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+      onClick={handleCopy}
+    >
+      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {copied ? "Copiado!" : "Copiar"}
+    </Button>
+  );
+}
+
 const PILLAR_COLORS: Record<string, string> = {
   tecnologia: "bg-blue-500/10 text-blue-700 border-blue-200",
   educação: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
