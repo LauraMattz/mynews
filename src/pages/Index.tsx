@@ -11,14 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Sparkles, Search, Newspaper, Settings2, GitBranch, LayoutDashboard, FileText } from "lucide-react";
+import { RefreshCw, Sparkles, Search, Newspaper, Settings2, GitBranch, LayoutDashboard, FileText, Trash2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
   const {
     articlesQuery, statsQuery, fetchNews, isFetching, fetchProgress,
     summarizeArticles, isSummarizing, summarizeProgress, vote, softDelete,
+    cleanupIrrelevant,
   } = useArticles();
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [search, setSearch] = useState("");
   const [topicFilter, setTopicFilter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -68,6 +70,20 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-destructive hover:text-destructive"
+                onClick={async () => {
+                  setIsCleaningUp(true);
+                  await cleanupIrrelevant();
+                  setIsCleaningUp(false);
+                }}
+                disabled={isCleaningUp}
+              >
+                <Trash2 className={`h-4 w-4 ${isCleaningUp ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline">Limpar Irrelevantes</span>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
