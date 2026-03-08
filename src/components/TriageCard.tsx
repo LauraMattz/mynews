@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, ExternalLink, Sparkles, CheckCircle2, XCircle, Clock, Bot } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ThumbsUp, ThumbsDown, ExternalLink, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMemo } from "react";
@@ -38,47 +39,31 @@ interface TriageCardProps {
     ai_review_status: string | null;
     feeds: any;
   };
+  selected: boolean;
+  onToggleSelect: (id: string) => void;
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
   onGenerateSummary: (id: string) => void;
   isSummarizing: boolean;
 }
 
-export function TriageCard({ article, onApprove, onReject, onGenerateSummary, isSummarizing }: TriageCardProps) {
+export function TriageCard({ article, selected, onToggleSelect, onApprove, onReject, onGenerateSummary, isSummarizing }: TriageCardProps) {
   const cleanTitle = useMemo(() => stripHtml(article.title), [article.title]);
   const cleanDescription = useMemo(() => article.description ? stripHtml(article.description) : null, [article.description]);
   const tags = article.ai_relevance_tags || [];
-  const aiScore = article.ai_relevance_score || 0;
-  const aiStatus = article.ai_review_status || "pending";
   const topicName = article.feeds?.topics?.name;
 
-  const statusIcon = aiStatus === "approved" 
-    ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-    : aiStatus === "rejected" 
-    ? <XCircle className="h-4 w-4 text-destructive" />
-    : <Clock className="h-4 w-4 text-amber-500" />;
-
-  const statusBorder = aiStatus === "approved" 
-    ? "border-l-emerald-500" 
-    : aiStatus === "rejected" 
-    ? "border-l-destructive" 
-    : "border-l-amber-400";
-
   return (
-    <Card className={`transition-all hover:shadow-sm border-l-4 ${statusBorder}`}>
+    <Card className={`transition-all hover:shadow-sm ${selected ? "ring-2 ring-primary/50 bg-primary/5" : ""}`}>
       <CardContent className="p-4 space-y-2">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Checkbox
+            checked={selected}
+            onCheckedChange={() => onToggleSelect(article.id)}
+            className="mt-1"
+          />
           <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-2">
-              {statusIcon}
-              {aiStatus !== "pending" && (
-                <Badge variant="outline" className="text-[10px] py-0 gap-1">
-                  <Bot className="h-3 w-3" />
-                  IA: {aiScore}/10
-                </Badge>
-              )}
-            </div>
             <a
               href={article.link}
               target="_blank"
@@ -95,7 +80,7 @@ export function TriageCard({ article, onApprove, onReject, onGenerateSummary, is
         </div>
 
         {/* Tags & metadata */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap pl-7">
           {tags.map(tag => (
             <Badge key={tag} variant="outline" className={`text-[10px] py-0 px-1.5 ${PILLAR_COLORS[tag] || ""}`}>
               {PILLAR_LABELS[tag] || tag}
@@ -115,11 +100,11 @@ export function TriageCard({ article, onApprove, onReject, onGenerateSummary, is
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-2 pt-1 pl-7">
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 border-emerald-200"
+            className="gap-1.5 text-xs border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
             onClick={() => {
               onApprove(article.id);
               onGenerateSummary(article.id);
