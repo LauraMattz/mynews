@@ -9,26 +9,26 @@ interface StatsProps {
 }
 
 const statItems = [
-  { key: "activeFeeds", label: "Feeds Ativos", icon: Rss, color: "text-primary" },
+  { key: "activeFeeds", label: "Feeds", icon: Rss, color: "text-primary" },
   { key: "totalArticles", label: "Artigos", icon: FileText, color: "text-accent" },
   { key: "summarizedArticles", label: "Resumidos", icon: Sparkles, color: "text-primary" },
-  { key: "pendingTriage", label: "Para Triar", icon: Inbox, color: "text-accent" },
+  { key: "pendingTriage", label: "Triar", icon: Inbox, color: "text-accent" },
 ] as const;
 
 export function StatsBar({ activeFeeds, totalArticles, summarizedArticles, pendingTriage }: StatsProps) {
   const values = { activeFeeds, totalArticles, summarizedArticles, pendingTriage };
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-4 gap-2 sm:gap-3">
       {statItems.map(({ key, label, icon: Icon, color }) => (
         <Card key={key} className="border-0 shadow-sm bg-card/80">
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className={`h-10 w-10 rounded-xl bg-muted flex items-center justify-center ${color}`}>
-              <Icon className="h-5 w-5" />
+          <CardContent className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 p-2.5 sm:p-4">
+            <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-muted flex items-center justify-center ${color} shrink-0`}>
+              <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
-            <div>
-              <p className="text-2xl font-bold leading-none">{values[key]}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+            <div className="text-center sm:text-left">
+              <p className="text-lg sm:text-2xl font-bold leading-none">{values[key]}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{label}</p>
             </div>
           </CardContent>
         </Card>
