@@ -30,13 +30,16 @@ export function DesktopNav() {
             <button
               key={path}
               onClick={() => navigate(path)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors w-full text-left ${
+              className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full text-left ${
                 active
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? "text-primary bg-primary/10 shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted hover:translate-x-0.5"
               }`}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              {active && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-primary animate-scale-in" />
+              )}
+              <Icon className={`h-4 w-4 shrink-0 transition-transform duration-200 ${active ? "scale-110" : ""}`} />
               {label}
             </button>
           );

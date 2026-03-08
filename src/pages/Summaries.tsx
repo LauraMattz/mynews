@@ -292,7 +292,7 @@ export default function Summaries() {
               const copyText = `${cleanTitle}\n(Português, ${readTime} min, texto)\n${article.link}\n\n${(article.summary || '').replace(/\*\*/g, '')}`;
 
               return (
-                <Card key={article.id} className="transition-all hover:shadow-sm">
+                <Card key={article.id} className="transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 animate-fade-in" style={{ animationDelay: `${filtered.indexOf(article) * 40}ms` }}>
                   <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                     {/* Summary block with copy */}
                     <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 sm:p-4 text-xs sm:text-sm text-foreground/90 leading-relaxed relative group">
