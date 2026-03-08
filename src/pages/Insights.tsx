@@ -113,9 +113,10 @@ export default function Insights() {
       .sort((a, b) => b.voteScore - a.voteScore)
       .slice(0, 5);
 
-    // Top AI scored
-    const topAI = [...articles]
-      .sort((a, b) => (b.ai_relevance_score || 0) - (a.ai_relevance_score || 0))
+    // Longest summaries (most complete)
+    const topLongest = articles
+      .map(a => ({ ...a, wordCount: a.summary?.split(/\s+/).filter(w => w.length > 0).length || 0 }))
+      .sort((a, b) => b.wordCount - a.wordCount)
       .slice(0, 5);
 
     // Average words per summary
@@ -126,7 +127,7 @@ export default function Insights() {
 
     return {
       total, sentNewsletter, liked, avgScore, avgWords,
-      pillarData, sourceData, volumeData, topLiked, topAI,
+      pillarData, sourceData, volumeData, topLiked, topLongest,
     };
   }, [articles, votes]);
 
@@ -142,8 +143,7 @@ export default function Insights() {
     { label: "Resumos", value: stats.total, icon: FileText, color: "text-primary" },
     { label: "Curtidos", value: stats.liked, icon: ThumbsUp, color: "text-accent" },
     { label: "Newsletter", value: stats.sentNewsletter, icon: Send, color: "text-primary" },
-    { label: "Score IA médio", value: stats.avgScore, icon: Sparkles, color: "text-accent" },
-    { label: "Palavras/resumo", value: stats.avgWords, icon: Clock, color: "text-primary" },
+    { label: "Palavras/resumo", value: stats.avgWords, icon: Clock, color: "text-accent" },
   ];
 
   return (
@@ -170,7 +170,7 @@ export default function Insights() {
 
       <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {statCards.map(({ label, value, icon: Icon, color }) => (
             <Card key={label} className="border-0 shadow-sm">
               <CardContent className="p-3 sm:p-4 flex flex-col items-center text-center gap-1">
@@ -331,16 +331,16 @@ export default function Insights() {
             </CardContent>
           </Card>
 
-          {/* Top AI scored */}
+          {/* Longest summaries */}
           <Card>
             <CardHeader className="p-3 sm:p-4 pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Maior score IA
+                <FileText className="h-4 w-4 text-primary" />
+                Resumos mais completos
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
-              {stats.topAI.map((a, i) => (
+              {stats.topLongest.map((a, i) => (
                 <a
                   key={a.id}
                   href={a.link}
@@ -354,11 +354,7 @@ export default function Insights() {
                       {a.title}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-[9px] font-mono font-bold ${
-                        (a.ai_relevance_score || 0) >= 7 ? "text-emerald-600" : "text-amber-600"
-                      }`}>
-                        IA: {a.ai_relevance_score || 0}/10
-                      </span>
+                      <Badge variant="outline" className="text-[9px] py-0 px-1">{a.wordCount} palavras</Badge>
                       {a.source_name && (
                         <span className="text-[9px] text-muted-foreground">{a.source_name}</span>
                       )}
