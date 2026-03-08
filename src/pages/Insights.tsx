@@ -311,7 +311,9 @@ export default function Insights() {
                       fontSize: "12px",
                     }}
                   />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Artigos" />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Artigos">
+                    <LabelList dataKey="count" position="right" style={{ fontSize: 10, fill: "hsl(var(--foreground))" }} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
