@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Trash2, ExternalLink, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useMemo } from "react";
+
+function stripHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
 
 interface ArticleCardProps {
   article: {
