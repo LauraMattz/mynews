@@ -25,7 +25,7 @@ interface ArticleCardProps {
 }
 
 export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummarizing }: ArticleCardProps) {
-  const currentVote = article.votes?.[0]?.vote || 0;
+  const currentVote = article.votes?.vote || 0;
   const topicName = article.feeds?.topics?.name;
 
   return (
