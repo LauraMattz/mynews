@@ -80,7 +80,28 @@ export default function Summaries() {
         .not("summary", "is", null)
         .order("published_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Fetch votes to sort by liked first
+      const articleIds = (data || []).map(a => a.id);
+      const { data: votes } = await supabase
+        .from("votes")
+        .select("article_id, vote")
+        .in("article_id", articleIds);
+
+      const voteMap = new Map<string, number>();
+      for (const v of (votes || [])) {
+        voteMap.set(v.article_id, (voteMap.get(v.article_id) || 0) + v.vote);
+      }
+
+      // Sort: liked (vote > 0) first, then by date
+      return (data || []).sort((a, b) => {
+        const va = voteMap.get(a.id) || 0;
+        const vb = voteMap.get(b.id) || 0;
+        if (va > 0 && vb <= 0) return -1;
+        if (vb > 0 && va <= 0) return 1;
+        if (va !== vb) return vb - va;
+        return new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime();
+      });
     },
   });
 
