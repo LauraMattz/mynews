@@ -47,7 +47,7 @@ export function useArticles() {
         .select("*, feeds(name, topic_id, topics(name))")
         .eq("is_deleted", false)
         .is("summary", null)
-        .order("published_at", { ascending: false })
+        .order("recommendation_score", { ascending: false })
         .limit(100);
       if (error) throw error;
       return data;

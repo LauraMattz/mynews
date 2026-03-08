@@ -77,7 +77,7 @@ export default function Summaries() {
         .select("id, title, link, summary, source_name, published_at, created_at, sent_to_newsletter, ai_relevance_tags, ai_relevance_score, feeds(name, topics(name))")
         .eq("is_deleted", false)
         .not("summary", "is", null)
-        .order("created_at", { ascending: false });
+        .order("recommendation_score", { ascending: false });
 
       if (error) throw error;
       return data || [];
