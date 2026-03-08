@@ -141,6 +141,27 @@ const Index = () => {
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <ThemeToggle />
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1 h-8 px-2 sm:px-3">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    <span className="hidden sm:inline">Filtros</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4 text-primary" />
+                      Filtros, Tópicos e Feeds
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-2">
+                    <FilterTermsEditor />
+                    <TopicManager />
+                    <FeedManager />
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1 h-8 px-2 sm:px-3">
