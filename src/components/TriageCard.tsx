@@ -79,15 +79,17 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
         exiting === "reject" ? "opacity-0 -translate-x-12 scale-95" : ""
       }`}
     >
-      <CardContent className="p-3 sm:p-4 space-y-2">
-        {/* Header */}
+      <CardContent className="p-3 sm:p-4">
         <div className="flex items-start gap-2 sm:gap-3">
+          {/* Checkbox */}
           <Checkbox
             checked={selected}
             onCheckedChange={() => onToggleSelect(article.id)}
-            className="mt-0.5 shrink-0"
+            className="mt-1 shrink-0"
           />
-          <div className="flex-1 min-w-0 space-y-1">
+
+          {/* Content */}
+          <div className="flex-1 min-w-0 space-y-1.5">
             <a
               href={article.link}
               target="_blank"
@@ -100,51 +102,50 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
             {cleanDescription && (
               <p className="text-[11px] sm:text-xs text-muted-foreground line-clamp-2">{cleanDescription}</p>
             )}
+            {/* Tags & metadata */}
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
+              {tags.map(tag => (
+                <Badge key={tag} variant="outline" className={`text-[9px] sm:text-[10px] py-0 px-1 sm:px-1.5 ${PILLAR_COLORS[tag] || ""}`}>
+                  {PILLAR_LABELS[tag] || tag}
+                </Badge>
+              ))}
+              {article.source_name && (
+                <Badge variant="outline" className="text-[9px] sm:text-[10px] py-0 px-1 sm:px-1.5">{article.source_name}</Badge>
+              )}
+              {topicName && (
+                <Badge className="text-[9px] sm:text-[10px] py-0 px-1 sm:px-1.5 bg-primary/10 text-primary border-0">{topicName}</Badge>
+              )}
+              {article.published_at && (
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground">
+                  {formatDistanceToNow(new Date(article.published_at), { addSuffix: true, locale: ptBR })}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Tags & metadata */}
-        <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap pl-6 sm:pl-7">
-          {tags.map(tag => (
-            <Badge key={tag} variant="outline" className={`text-[9px] sm:text-[10px] py-0 px-1 sm:px-1.5 ${PILLAR_COLORS[tag] || ""}`}>
-              {PILLAR_LABELS[tag] || tag}
-            </Badge>
-          ))}
-          {article.source_name && (
-            <Badge variant="outline" className="text-[9px] sm:text-[10px] py-0 px-1 sm:px-1.5">{article.source_name}</Badge>
-          )}
-          {topicName && (
-            <Badge className="text-[9px] sm:text-[10px] py-0 px-1 sm:px-1.5 bg-primary/10 text-primary border-0">{topicName}</Badge>
-          )}
-          {article.published_at && (
-            <span className="text-[9px] sm:text-[10px] text-muted-foreground">
-              {formatDistanceToNow(new Date(article.published_at), { addSuffix: true, locale: ptBR })}
-            </span>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1 pl-6 sm:pl-7">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1 text-[11px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-            onClick={handleApprove}
-            disabled={isSummarizing || exiting !== null}
-          >
-            <ThumbsUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            Aprovar + Resumir
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1 text-[11px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 text-destructive hover:bg-destructive/5 border-destructive/30"
-            onClick={handleReject}
-            disabled={exiting !== null}
-          >
-            <ThumbsDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            Descartar
-          </Button>
+          {/* Actions — right side */}
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1 text-[11px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 w-full justify-center"
+              onClick={handleApprove}
+              disabled={isSummarizing || exiting !== null}
+            >
+              <ThumbsUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span className="hidden sm:inline">Aprovar +</span><span className="sm:hidden">+</span> Resumir
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1 text-[11px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 text-destructive hover:bg-destructive/5 border-destructive/30 w-full justify-center"
+              onClick={handleReject}
+              disabled={exiting !== null}
+            >
+              <ThumbsDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              Descartar
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
