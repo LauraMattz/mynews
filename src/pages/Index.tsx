@@ -25,6 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const {
     triageQuery, statsQuery, fetchNews, isFetching, fetchProgress,
     summarizeArticles, isSummarizing, summarizeProgress,
@@ -33,6 +34,51 @@ const Index = () => {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("triagem");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [linkInput, setLinkInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+
+  const handlePasteLink = async () => {
+    if (!linkInput.trim()) return;
+    setIsGenerating(true);
+    try {
+      const { data: inserted, error: insertErr } = await supabase
+        .from("articles")
+        .upsert(
+          { link: linkInput.trim(), title: "Carregando...", source_name: "Link manual" },
+          { onConflict: "link", ignoreDuplicates: false }
+        )
+        .select("id, title, description")
+        .single();
+      if (insertErr) throw insertErr;
+
+      const { data, error } = await supabase.functions.invoke("summarize-news", {
+        body: {
+          articles: [
+            { id: inserted.id, title: inserted.title, description: inserted.description || linkInput },
+          ],
+        },
+      });
+      if (error) throw error;
+      if (data.summaries?.length > 0) {
+        await supabase.from("articles").update({ summary: data.summaries[0].summary }).eq("id", inserted.id);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["summarized-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["article-stats"] });
+      setLinkInput("");
+      setLinkDialogOpen(false);
+      toast({ title: "Resumo gerado com sucesso!" });
+    } catch (e) {
+      toast({
+        title: "Erro ao gerar resumo",
+        description: e instanceof Error ? e.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const stats = statsQuery.data;
   const triageArticles = triageQuery.data || [];
