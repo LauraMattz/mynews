@@ -312,17 +312,17 @@ const Index = () => {
 
         {/* Articles */}
         <div className="space-y-2 sm:space-y-3">
-          {filtered.map((article) =>
-          <TriageCard
-            key={article.id}
-            article={article}
-            selected={selected.has(article.id)}
-            onToggleSelect={toggleSelect}
-            onApprove={(id) => approveArticle.mutate(id)}
-            onReject={(id) => rejectArticle.mutate(id)}
-            onGenerateSummary={(id) => summarizeArticles([id])}
-            isSummarizing={isSummarizing} />
-
+          {filtered.map((article, i) =>
+          <div key={article.id} className="animate-fade-in" style={{ animationDelay: `${i * 40}ms` }}>
+            <TriageCard
+              article={article}
+              selected={selected.has(article.id)}
+              onToggleSelect={toggleSelect}
+              onApprove={(id) => approveArticle.mutate(id)}
+              onReject={(id) => rejectArticle.mutate(id)}
+              onGenerateSummary={(id) => summarizeArticles([id])}
+              isSummarizing={isSummarizing} />
+          </div>
           )}
         </div>
 
