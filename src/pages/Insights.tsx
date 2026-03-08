@@ -170,7 +170,7 @@ export default function Insights() {
 
       <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           {statCards.map(({ label, value, icon: Icon, color }) => (
             <Card key={label} className="border-0 shadow-sm">
               <CardContent className="p-3 sm:p-4 flex flex-col items-center text-center gap-1">
