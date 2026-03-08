@@ -242,22 +242,22 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1 text-xs h-8 px-3 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-                onClick={handleApprove}
-                disabled={isSummarizing || exiting !== null}
-              >
-                <ThumbsUp className="h-3.5 w-3.5" />
-                Aprovar
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
                 className="gap-1 text-xs h-8 px-3 text-destructive hover:bg-destructive/5 border-destructive/30"
                 onClick={handleReject}
                 disabled={exiting !== null}
               >
                 <ThumbsDown className="h-3.5 w-3.5" />
                 Descartar
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-xs h-8 px-3 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                onClick={handleApprove}
+                disabled={isSummarizing || exiting !== null}
+              >
+                <ThumbsUp className="h-3.5 w-3.5" />
+                Aprovar
               </Button>
             </div>
           </div>
