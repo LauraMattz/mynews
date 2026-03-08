@@ -5,12 +5,63 @@ import { useState, useCallback } from "react";
 
 // Blocklist: terms that indicate off-topic/commercial content
 const BLOCKLIST_TERMS = [
+  // Astrologia
   "horóscopo", "horoscopo", "tarot", "signo", "signos", "astrologia",
-  "previsão para os signos", "previsão para os 12 signos",
+  "previsão para os signos", "previsão para os 12 signos", "fase da lua",
+  "lua hoje", "mapa astral",
+  // Comercial
   "patrocinado", "publipost", "publieditorial", "branded content",
   "oferta", "cupom", "desconto exclusivo", "black friday",
-  "compre agora", "link de afiliado", "sorteio",
+  "compre agora", "link de afiliado", "sorteio", "em oferta",
+  // Entretenimento / Fofoca / Reality
+  "bbb 26", "bbb 25", "big brother", "reality show",
+  "fofoca", "celebridade", "ex-namorada de", "ex-namorado de",
+  "ivete sangalo", "larissa manoela", "ticiane pinheiro",
+  "solange couto", "leo lins",
+  // Esportes (não relacionados a liderança/educação)
+  "fórmula 1", "formula 1", "gp da austr", "arnold classic",
+  "fisiculturismo", "campeonato paulista", "palmeiras",
+  "futebol ao vivo", "jogos de hoje", "onde assistir",
+  "men's physique", "bikini", "bodybuilding",
+  // Lifestyle genérico
   "receita de", "dieta de", "emagreça",
+  "ar-condicionado", "leite de vaca para gato",
+  "água quente pode congelar", "motor turbo",
+  "mouse attack shark",
+];
+
+// Relevance: articles must match at least one of these terms to be kept
+const RELEVANCE_TERMS = [
+  // Tecnologia
+  "tecnologia", "tech", "digital", "inteligência artificial", "ia ", " ia,", " ia.",
+  "software", "hardware", "dados", "algoritmo", "startup", "inovação",
+  "cibersegurança", "internet", "plataforma", "automação", "robô",
+  "machine learning", "deep learning", "computação", "nuvem", "cloud",
+  "5g", "semicondutor", "chip", "blockchain", "metaverso",
+  "acessibilidade digital", "inclusão digital", "transformação digital",
+  "apagão de internet", "tecnoabsolutismo",
+  // Educação
+  "educação", "ensino", "escola", "universidade", "professor", "aluno",
+  "aprendizagem", "pedagog", "currículo", "enem", "vestibular",
+  "pesquisa", "pesquisador", "ciência", "científic", "acadêmic",
+  "doutorado", "mestrado", "bolsa de estudo", "capes", "cnpq",
+  "analfabet", "letramento", "formação", "capacitação",
+  // Liderança
+  "liderança", "líder", "gestão", "governança", "política pública",
+  "governo", "congresso", "senado", "câmara", "ministro", "presidente",
+  "reforma", "regulação", "legislação", "lei ", "projeto de lei",
+  "democracia", "direitos", "constituição", "supremo", "stf",
+  "eleição", "eleições", "voto", "mandate",
+  // Equidade racial
+  "equidade racial", "racismo", "racial", "negro", "negra", "preto", "preta",
+  "quilombo", "afro", "antirracis", "discriminação",
+  "diversidade", "inclusão", "igualdade", "gênero",
+  "feminismo", "feminicídio", "violência contra a mulher", "violência doméstica",
+  "mulher", "mulheres", "desigualdade", "vulnerável", "vulnerabilidade",
+  "favela", "periferia", "comunidade", "direitos humanos",
+  "trabalho", "emprego", "salário", "renda", "pobreza",
+  "saúde pública", "sus", "acesso", "política social",
+  "bpc", "deficiência",
 ];
 
 export interface FetchProgress {
@@ -103,11 +154,14 @@ export function useArticles() {
       setFetchProgress({ stage: "saving", message: `Salvando ${data.items.length} artigos...`, percent: 70 });
 
       // Batch insert - much faster than individual inserts
-      // Filter out off-topic/commercial articles using blocklist
+      // Filter out off-topic/commercial articles using blocklist + relevance check
       const articlesToInsert = data.items
         .filter((item: any) => {
           const text = `${item.title} ${item.description || ""}`.toLowerCase();
-          return !BLOCKLIST_TERMS.some(term => text.includes(term));
+          // First: reject blocklisted terms
+          if (BLOCKLIST_TERMS.some(term => text.includes(term))) return false;
+          // Second: must match at least one relevance term
+          return RELEVANCE_TERMS.some(term => text.includes(term));
         })
         .map((item: any) => {
           const feed = feeds.find(f => f.name === item.sourceName);
