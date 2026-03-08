@@ -63,12 +63,14 @@ export function useArticles() {
         { count: activeFeeds },
         { count: pendingTriage },
         { data: avgData },
+        { count: sentToNewsletter },
       ] = await Promise.all([
         supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false),
         supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false).not("summary", "is", null),
         supabase.from("feeds").select("*", { count: "exact", head: true }).eq("is_active", true),
         supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false).is("summary", null),
         supabase.from("articles").select("relevance_score").eq("is_deleted", false).not("relevance_score", "eq", 0),
+        supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false).eq("sent_to_newsletter", true),
       ]);
       const avgScore = avgData && avgData.length > 0
         ? avgData.reduce((sum, a) => sum + a.relevance_score, 0) / avgData.length
@@ -80,6 +82,7 @@ export function useArticles() {
         pendingTriage: pendingTriage || 0,
         avgRelevanceScore: Math.round(avgScore * 10) / 10,
         votedArticles: avgData?.length || 0,
+        sentToNewsletter: sentToNewsletter || 0,
       };
     },
   });
