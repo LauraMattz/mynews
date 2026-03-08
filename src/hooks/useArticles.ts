@@ -139,9 +139,11 @@ export function useArticles() {
           };
         });
 
+      const finalArticles = limit && limit > 0 ? articlesToInsert.slice(0, limit) : articlesToInsert;
+
       let inserted = 0;
       const batchSize = 50;
-      for (let i = 0; i < articlesToInsert.length; i += batchSize) {
+      for (let i = 0; i < finalArticles.length; i += batchSize) {
         const batch = articlesToInsert.slice(i, i + batchSize);
         const { data: insertedData, error: insertError } = await supabase
           .from("articles")
