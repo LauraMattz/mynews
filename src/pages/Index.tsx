@@ -221,131 +221,103 @@ const Index = () => {
         )}
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="triagem" className="gap-1.5 text-xs sm:text-sm">
-              <Inbox className="h-4 w-4" />
-              Triagem
-              {triageArticles.length > 0 && (
-                <Badge variant="destructive" className="h-5 min-w-5 text-[10px] px-1 ml-1">
-                  {triageArticles.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="filtros" className="gap-1.5 text-xs sm:text-sm">
-              <SlidersHorizontal className="h-4 w-4" />
-              Filtros
-            </TabsTrigger>
-          </TabsList>
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar artigos..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-9 h-9 sm:h-10 text-sm"
+          />
+        </div>
 
-          {/* Triagem tab */}
-          <TabsContent value="triagem" className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar artigos..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="pl-9 h-9 sm:h-10 text-sm"
-              />
+        {/* Action bar */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={filtered.length > 0 && selected.size === filtered.length}
+              onCheckedChange={toggleSelectAll}
+            />
+            <span className="text-xs sm:text-sm text-muted-foreground">
+              {selected.size > 0 ? `${selected.size} sel.` : `${filtered.length} artigos`}
+            </span>
+          </div>
+          {selected.size > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => {
+                  const ids = Array.from(selected);
+                  summarizeArticles(ids);
+                  setSelected(new Set());
+                  toast({ title: `Gerando resumo de ${ids.length} artigos...` });
+                }}
+                size="sm"
+                variant="outline"
+                disabled={isSummarizing}
+                className="gap-1 text-xs h-8 text-primary hover:text-primary border-primary/30"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Resumir</span> {selected.size}
+              </Button>
+              <Button
+                onClick={handleBulkDiscard}
+                size="sm"
+                variant="outline"
+                className="gap-1 text-xs h-8 text-destructive hover:text-destructive border-destructive/30"
+              >
+                <ThumbsDown className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Descartar</span> {selected.size}
+              </Button>
             </div>
+          )}
+        </div>
 
-            {/* Action bar */}
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={filtered.length > 0 && selected.size === filtered.length}
-                  onCheckedChange={toggleSelectAll}
-                />
-                <span className="text-xs sm:text-sm text-muted-foreground">
-                  {selected.size > 0 ? `${selected.size} sel.` : `${filtered.length} artigos`}
-                </span>
-              </div>
-              {selected.size > 0 && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => {
-                      const ids = Array.from(selected);
-                      summarizeArticles(ids);
-                      setSelected(new Set());
-                      toast({ title: `Gerando resumo de ${ids.length} artigos...` });
-                    }}
-                    size="sm"
-                    variant="outline"
-                    disabled={isSummarizing}
-                    className="gap-1 text-xs h-8 text-primary hover:text-primary border-primary/30"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Resumir</span> {selected.size}
-                  </Button>
-                  <Button
-                    onClick={handleBulkDiscard}
-                    size="sm"
-                    variant="outline"
-                    className="gap-1 text-xs h-8 text-destructive hover:text-destructive border-destructive/30"
-                  >
-                    <ThumbsDown className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Descartar</span> {selected.size}
-                  </Button>
-                </div>
-              )}
+        {/* Articles */}
+        <div className="space-y-2 sm:space-y-3">
+          {filtered.map(article => (
+            <TriageCard
+              key={article.id}
+              article={article}
+              selected={selected.has(article.id)}
+              onToggleSelect={toggleSelect}
+              onApprove={id => approveArticle.mutate(id)}
+              onReject={id => rejectArticle.mutate(id)}
+              onGenerateSummary={id => summarizeArticles([id])}
+              isSummarizing={isSummarizing}
+            />
+          ))}
+        </div>
+
+        {/* Empty state */}
+        {filtered.length === 0 && !triageQuery.isLoading && (
+          <div className="text-center py-16 sm:py-20 space-y-3">
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
+              <Inbox className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground/40" />
             </div>
-
-            {/* Articles */}
-            <div className="space-y-2 sm:space-y-3">
-              {filtered.map(article => (
-                <TriageCard
-                  key={article.id}
-                  article={article}
-                  selected={selected.has(article.id)}
-                  onToggleSelect={toggleSelect}
-                  onApprove={id => approveArticle.mutate(id)}
-                  onReject={id => rejectArticle.mutate(id)}
-                  onGenerateSummary={id => summarizeArticles([id])}
-                  isSummarizing={isSummarizing}
-                />
-              ))}
+            <div>
+              <h2 className="text-base sm:text-lg font-semibold text-muted-foreground">Nenhum artigo para triar</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground/70 mt-1 max-w-sm mx-auto">
+                {triageArticles.length === 0
+                  ? 'Clique em "Buscar Notícias" para coletar artigos.'
+                  : "Tente ajustar os filtros."}
+              </p>
             </div>
-
-            {/* Empty state */}
-            {filtered.length === 0 && !triageQuery.isLoading && (
-              <div className="text-center py-16 sm:py-20 space-y-3">
-                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
-                  <Inbox className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground/40" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-semibold text-muted-foreground">Nenhum artigo para triar</h2>
-                  <p className="text-xs sm:text-sm text-muted-foreground/70 mt-1 max-w-sm mx-auto">
-                    {triageArticles.length === 0
-                      ? 'Clique em "Buscar Notícias" para coletar artigos.'
-                      : "Tente ajustar os filtros."}
-                  </p>
-                </div>
-                {triageArticles.length === 0 && (
-                  <Button onClick={fetchNews} disabled={isFetching} className="gap-1.5">
-                    <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-                    Buscar Notícias
-                  </Button>
-                )}
-              </div>
+            {triageArticles.length === 0 && (
+              <Button onClick={fetchNews} disabled={isFetching} className="gap-1.5">
+                <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+                Buscar Notícias
+              </Button>
             )}
+          </div>
+        )}
 
-            {triageQuery.isLoading && (
-              <div className="text-center py-16 sm:py-20">
-                <RefreshCw className="h-8 w-8 text-muted-foreground/40 animate-spin mx-auto" />
-                <p className="text-sm text-muted-foreground mt-3">Carregando artigos...</p>
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Filtros tab */}
-          <TabsContent value="filtros" className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
-            <FilterTermsEditor />
-            <TopicManager />
-            <FeedManager />
-          </TabsContent>
-        </Tabs>
+        {triageQuery.isLoading && (
+          <div className="text-center py-16 sm:py-20">
+            <RefreshCw className="h-8 w-8 text-muted-foreground/40 animate-spin mx-auto" />
+            <p className="text-sm text-muted-foreground mt-3">Carregando artigos...</p>
+          </div>
+        )}
       </main>
     </div>
   );
