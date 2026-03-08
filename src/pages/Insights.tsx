@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   ArrowLeft, BarChart3, TrendingUp, Sparkles, Clock,
-  FileText, ThumbsUp, Send, Loader2, Tag,
+  FileText, ThumbsUp, Send, Loader2, Tag, XCircle,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
