@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   RefreshCw, Search, Newspaper, ThumbsDown,
   Inbox, SlidersHorizontal, Sparkles, Link2, Loader2,
@@ -36,6 +37,8 @@ const Index = () => {
   const [linkInput, setLinkInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [fetchLimit, setFetchLimit] = useState<string>("");
+  const [fetchPopoverOpen, setFetchPopoverOpen] = useState(false);
 
   const handlePasteLink = async () => {
     if (!linkInput.trim()) return;
@@ -193,15 +196,48 @@ const Index = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-              <Button
-                onClick={fetchNews}
-                disabled={isFetching}
-                size="sm"
-                className="gap-1 h-8 px-2 sm:px-3 shadow-sm"
-              >
-                <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">Buscar</span>
-              </Button>
+              <Popover open={fetchPopoverOpen} onOpenChange={setFetchPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    disabled={isFetching}
+                    size="sm"
+                    className="gap-1 h-8 px-2 sm:px-3 shadow-sm"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+                    <span className="hidden sm:inline">Buscar</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-3" align="end">
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Limite de artigos</label>
+                      <Input
+                        type="number"
+                        placeholder="Todos"
+                        min={1}
+                        max={500}
+                        value={fetchLimit}
+                        onChange={e => setFetchLimit(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <p className="text-[10px] text-muted-foreground">Deixe vazio para trazer todos.</p>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        const limit = fetchLimit ? parseInt(fetchLimit) : undefined;
+                        fetchNews(limit);
+                        setFetchPopoverOpen(false);
+                      }}
+                      disabled={isFetching}
+                      size="sm"
+                      className="w-full gap-1.5"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
+                      Buscar Notícias
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
@@ -305,7 +341,7 @@ const Index = () => {
               </p>
             </div>
             {triageArticles.length === 0 && (
-              <Button onClick={fetchNews} disabled={isFetching} className="gap-1.5">
+              <Button onClick={() => fetchNews()} disabled={isFetching} className="gap-1.5">
                 <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                 Buscar Notícias
               </Button>

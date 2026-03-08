@@ -87,7 +87,7 @@ export function useArticles() {
     },
   });
 
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (limit?: number) => {
     setIsFetching(true);
     setFetchProgress({ stage: "fetching_feeds", message: "Buscando lista de feeds ativos...", percent: 10 });
     try {
@@ -139,10 +139,12 @@ export function useArticles() {
           };
         });
 
+      const finalArticles = limit && limit > 0 ? articlesToInsert.slice(0, limit) : articlesToInsert;
+
       let inserted = 0;
       const batchSize = 50;
-      for (let i = 0; i < articlesToInsert.length; i += batchSize) {
-        const batch = articlesToInsert.slice(i, i + batchSize);
+      for (let i = 0; i < finalArticles.length; i += batchSize) {
+        const batch = finalArticles.slice(i, i + batchSize);
         const { data: insertedData, error: insertError } = await supabase
           .from("articles")
           .upsert(batch, { onConflict: "link", ignoreDuplicates: true })
@@ -150,8 +152,8 @@ export function useArticles() {
         if (!insertError && insertedData) inserted += insertedData.length;
         setFetchProgress({
           stage: "saving",
-          message: `Salvando artigos... (${Math.min(i + batchSize, articlesToInsert.length)}/${articlesToInsert.length})`,
-          percent: 70 + ((i / articlesToInsert.length) * 25),
+          message: `Salvando artigos... (${Math.min(i + batchSize, finalArticles.length)}/${finalArticles.length})`,
+          percent: 70 + ((i / finalArticles.length) * 25),
         });
       }
 
