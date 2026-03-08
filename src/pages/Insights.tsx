@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
-  ArrowLeft, BarChart3, TrendingUp, Sparkles, Clock,
+  BarChart3, TrendingUp, Sparkles, Clock,
   FileText, ThumbsUp, Send, Loader2, Tag, XCircle,
 } from "lucide-react";
 import {
