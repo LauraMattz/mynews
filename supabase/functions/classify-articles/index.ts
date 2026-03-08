@@ -33,16 +33,56 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    // Recalculate source reputation before classifying
+    await supabase.rpc("recalculate_source_reputation");
+
+    // Gather feedback context: which sources/topics perform well
+    const { data: feedStats } = await supabase
+      .from("feeds")
+      .select("name, approval_rate, total_articles")
+      .gt("total_articles", 0)
+      .order("approval_rate", { ascending: false });
+
+    const { data: topVoted } = await supabase
+      .from("articles")
+      .select("title, ai_relevance_tags, relevance_score")
+      .eq("is_deleted", false)
+      .gt("relevance_score", 0)
+      .order("relevance_score", { ascending: false })
+      .limit(10);
+
+    const { data: worstVoted } = await supabase
+      .from("articles")
+      .select("title, ai_relevance_tags, relevance_score")
+      .eq("is_deleted", false)
+      .lt("relevance_score", 0)
+      .order("relevance_score", { ascending: true })
+      .limit(10);
+
+    const feedbackContext = [
+      feedStats && feedStats.length > 0 
+        ? `Fontes mais aceitas: ${feedStats.slice(0, 5).map(f => `${f.name} (${Math.round(f.approval_rate * 100)}%)`).join(", ")}.`
+        : "",
+      feedStats && feedStats.length > 0
+        ? `Fontes mais rejeitadas: ${feedStats.filter(f => f.approval_rate < 0.5).slice(0, 5).map(f => `${f.name} (${Math.round(f.approval_rate * 100)}%)`).join(", ")}.`
+        : "",
+      topVoted && topVoted.length > 0
+        ? `Artigos que o usuário mais gostou: ${topVoted.map(a => `"${a.title.slice(0, 60)}" [${(a.ai_relevance_tags || []).join(",")}]`).join("; ")}.`
+        : "",
+      worstVoted && worstVoted.length > 0
+        ? `Artigos rejeitados pelo usuário: ${worstVoted.map(a => `"${a.title.slice(0, 60)}"`).join("; ")}.`
+        : "",
+    ].filter(Boolean).join("\n");
+
     // Fetch articles to classify
     let query = supabase
       .from("articles")
-      .select("id, title, description, summary")
+      .select("id, title, description, summary, source_name")
       .eq("is_deleted", false);
 
     if (articleIds && articleIds.length > 0) {
       query = query.in("id", articleIds);
     } else {
-      // Only classify pending articles
       query = query.eq("ai_review_status", "pending").limit(30);
     }
 
