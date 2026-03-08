@@ -152,8 +152,8 @@ export function useArticles() {
         if (!insertError && insertedData) inserted += insertedData.length;
         setFetchProgress({
           stage: "saving",
-          message: `Salvando artigos... (${Math.min(i + batchSize, articlesToInsert.length)}/${articlesToInsert.length})`,
-          percent: 70 + ((i / articlesToInsert.length) * 25),
+          message: `Salvando artigos... (${Math.min(i + batchSize, finalArticles.length)}/${finalArticles.length})`,
+          percent: 70 + ((i / finalArticles.length) * 25),
         });
       }
 
