@@ -3,54 +3,72 @@ import { useNavigate } from "react-router-dom";
 import { useArticles } from "@/hooks/useArticles";
 import { TopicManager } from "@/components/TopicManager";
 import { FeedManager } from "@/components/FeedManager";
-import { ArticleCard } from "@/components/ArticleCard";
+import { FilterTermsEditor } from "@/components/FilterTermsEditor";
+import { TriageCard } from "@/components/TriageCard";
 import { StatsBar } from "@/components/StatsBar";
 import { PipelineProgress } from "@/components/PipelineProgress";
-import { PipelinePage } from "@/components/PipelinePage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Sparkles, Search, Newspaper, Settings2, GitBranch, LayoutDashboard, FileText, Trash2 } from "lucide-react";
+import {
+  RefreshCw, Search, Newspaper, Settings2, FileText, Bot, Loader2,
+  Inbox, SlidersHorizontal,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const {
-    articlesQuery, statsQuery, fetchNews, isFetching, fetchProgress,
-    summarizeArticles, isSummarizing, summarizeProgress, vote, softDelete,
-    cleanupIrrelevant,
+    triageQuery, statsQuery, fetchNews, isFetching, fetchProgress,
+    summarizeArticles, isSummarizing, summarizeProgress,
+    approveArticle, rejectArticle,
   } = useArticles();
-  const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [search, setSearch] = useState("");
-  const [topicFilter, setTopicFilter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("triagem");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [isClassifying, setIsClassifying] = useState(false);
 
-  const articles = articlesQuery.data || [];
   const stats = statsQuery.data;
+  const triageArticles = triageQuery.data || [];
 
-  // Debounced-style filtering with useMemo
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
-    return articles.filter(a => {
+    return triageArticles.filter(a => {
       const matchesSearch = !s ||
         a.title.toLowerCase().includes(s) ||
         a.description?.toLowerCase().includes(s) ||
         a.source_name?.toLowerCase().includes(s);
-      const matchesTopic = !topicFilter || (a.feeds?.topics as any)?.name === topicFilter;
-      return matchesSearch && matchesTopic;
+      const matchesStatus = statusFilter === "all" || a.ai_review_status === statusFilter;
+      return matchesSearch && matchesStatus;
     });
-  }, [articles, search, topicFilter]);
+  }, [triageArticles, search, statusFilter]);
 
-  const topics = useMemo(
-    () => [...new Set(articles.map(a => (a.feeds?.topics as any)?.name).filter(Boolean))],
-    [articles]
-  );
+  const pendingCount = triageArticles.filter(a => a.ai_review_status === "pending").length;
 
-  const unsummarizedCount = filtered.filter(a => !a.summary).length;
-
-  const handleSummarizeAll = () => {
-    const ids = filtered.filter(a => !a.summary).map(a => a.id);
-    if (ids.length > 0) summarizeArticles(ids);
+  const handleClassifyAll = async () => {
+    setIsClassifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("classify-articles");
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+      triageQuery.refetch();
+      statsQuery.refetch();
+      toast({
+        title: "Classificação concluída!",
+        description: `${data.approved} relevantes, ${data.rejected} irrelevantes.`,
+      });
+    } catch (e) {
+      toast({
+        title: "Erro na classificação",
+        description: e instanceof Error ? e.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsClassifying(false);
+    }
   };
 
   return (
@@ -70,20 +88,6 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-destructive hover:text-destructive"
-                onClick={async () => {
-                  setIsCleaningUp(true);
-                  await cleanupIrrelevant();
-                  setIsCleaningUp(false);
-                }}
-                disabled={isCleaningUp}
-              >
-                <Trash2 className={`h-4 w-4 ${isCleaningUp ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">Limpar Irrelevantes</span>
-              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -117,116 +121,106 @@ const Index = () => {
             activeFeeds={stats.activeFeeds}
             totalArticles={stats.totalArticles}
             summarizedArticles={stats.summarizedArticles}
-            avgRelevanceScore={stats.avgRelevanceScore}
+            pendingTriage={stats.pendingTriage}
           />
         )}
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
-            <TabsTrigger value="dashboard" className="gap-1.5">
-              <LayoutDashboard className="h-4 w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="triagem" className="gap-1.5">
+              <Inbox className="h-4 w-4" />
+              Triagem
+              {pendingCount > 0 && (
+                <Badge variant="destructive" className="h-5 min-w-5 text-[10px] px-1.5 ml-1">
+                  {pendingCount}
+                </Badge>
+              )}
             </TabsTrigger>
-            <TabsTrigger value="pipeline" className="gap-1.5">
-              <GitBranch className="h-4 w-4" />
-              <span className="hidden sm:inline">Pipeline</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-1.5">
-              <Settings2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Configurar</span>
+            <TabsTrigger value="filtros" className="gap-1.5">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filtros
             </TabsTrigger>
           </TabsList>
 
-          {/* Dashboard tab */}
-          <TabsContent value="dashboard" className="space-y-4 mt-4">
-            {/* Search and filters */}
+          {/* Triagem tab */}
+          <TabsContent value="triagem" className="space-y-4 mt-4">
+            {/* Search, filter & classify */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar artigos por título, descrição ou fonte..."
+                  placeholder="Buscar artigos..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   className="pl-9"
                 />
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge
-                  variant={!topicFilter ? "default" : "outline"}
-                  className="cursor-pointer transition-all"
-                  onClick={() => setTopicFilter(null)}
-                >
-                  Todos ({articles.length})
-                </Badge>
-                {topics.map(t => {
-                  const count = articles.filter(a => (a.feeds?.topics as any)?.name === t).length;
-                  return (
-                    <Badge
-                      key={t}
-                      variant={topicFilter === t ? "default" : "outline"}
-                      className="cursor-pointer transition-all"
-                      onClick={() => setTopicFilter(topicFilter === t ? null : t)}
-                    >
-                      {t} ({count})
-                    </Badge>
-                  );
-                })}
+              <div className="flex items-center gap-1.5">
+                {(["all", "pending", "approved", "rejected"] as const).map(s => (
+                  <Button
+                    key={s}
+                    variant={statusFilter === s ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setStatusFilter(s)}
+                    className="text-xs"
+                  >
+                    {s === "all" ? "Todos" : s === "pending" ? "⏳ Pendentes" : s === "approved" ? "✓ Aprovados" : "✗ Rejeitados"}
+                  </Button>
+                ))}
               </div>
             </div>
 
-            {/* Bulk actions */}
-            {filtered.length > 0 && (
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {filtered.length} artigos
-                  {topicFilter && ` em "${topicFilter}"`}
-                  {unsummarizedCount > 0 && ` · ${unsummarizedCount} sem resumo`}
-                </p>
-                {unsummarizedCount > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSummarizeAll}
-                    disabled={isSummarizing}
-                    className="gap-1.5"
-                  >
-                    <Sparkles className={`h-4 w-4 ${isSummarizing ? "animate-pulse" : ""}`} />
-                    {isSummarizing ? "Gerando..." : `Resumir todos (${unsummarizedCount})`}
-                  </Button>
+            {/* Action bar */}
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {filtered.length} artigos para triagem
+              </p>
+              <Button
+                onClick={handleClassifyAll}
+                disabled={isClassifying || pendingCount === 0}
+                size="sm"
+                variant="outline"
+                className="gap-1.5"
+              >
+                {isClassifying ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Bot className="h-4 w-4" />
                 )}
-              </div>
-            )}
+                {isClassifying ? "Classificando..." : `Classificar IA (${pendingCount})`}
+              </Button>
+            </div>
 
             {/* Articles */}
             <div className="space-y-3">
               {filtered.map(article => (
-                <ArticleCard
+                <TriageCard
                   key={article.id}
                   article={article}
-                  onVote={(id, v) => vote.mutate({ article_id: id, voteValue: v })}
-                  onDelete={id => softDelete.mutate(id)}
-                  onSummarize={id => summarizeArticles([id])}
+                  onApprove={id => approveArticle.mutate(id)}
+                  onReject={id => rejectArticle.mutate(id)}
+                  onGenerateSummary={id => summarizeArticles([id])}
                   isSummarizing={isSummarizing}
                 />
               ))}
             </div>
 
             {/* Empty state */}
-            {filtered.length === 0 && !articlesQuery.isLoading && (
+            {filtered.length === 0 && !triageQuery.isLoading && (
               <div className="text-center py-20 space-y-4">
                 <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
-                  <Newspaper className="h-8 w-8 text-muted-foreground/40" />
+                  <Inbox className="h-8 w-8 text-muted-foreground/40" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-muted-foreground">Nenhum artigo encontrado</h2>
+                  <h2 className="text-lg font-semibold text-muted-foreground">Nenhum artigo para triar</h2>
                   <p className="text-sm text-muted-foreground/70 mt-1 max-w-sm mx-auto">
-                    {articles.length === 0
-                      ? "Clique em \"Buscar Notícias\" para começar a coletar artigos dos seus feeds."
-                      : "Tente ajustar os filtros de busca ou tópico."}
+                    {triageArticles.length === 0
+                      ? 'Clique em "Buscar Notícias" para coletar artigos.'
+                      : "Tente ajustar os filtros."}
                   </p>
                 </div>
-                {articles.length === 0 && (
+                {triageArticles.length === 0 && (
                   <Button onClick={fetchNews} disabled={isFetching} className="gap-1.5">
                     <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                     Buscar Notícias
@@ -235,7 +229,7 @@ const Index = () => {
               </div>
             )}
 
-            {articlesQuery.isLoading && (
+            {triageQuery.isLoading && (
               <div className="text-center py-20">
                 <RefreshCw className="h-8 w-8 text-muted-foreground/40 animate-spin mx-auto" />
                 <p className="text-sm text-muted-foreground mt-3">Carregando artigos...</p>
@@ -243,13 +237,9 @@ const Index = () => {
             )}
           </TabsContent>
 
-          {/* Pipeline tab */}
-          <TabsContent value="pipeline" className="mt-4">
-            <PipelinePage />
-          </TabsContent>
-
-          {/* Settings tab */}
-          <TabsContent value="settings" className="space-y-4 mt-4">
+          {/* Filtros tab */}
+          <TabsContent value="filtros" className="space-y-4 mt-4">
+            <FilterTermsEditor />
             <TopicManager />
             <FeedManager />
           </TabsContent>

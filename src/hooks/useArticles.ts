@@ -3,85 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useCallback } from "react";
 
-// Blocklist: terms that indicate off-topic/commercial content
-const BLOCKLIST_TERMS = [
-  // Astrologia
-  "horóscopo", "horoscopo", "tarot", "signo", "signos", "astrologia",
-  "previsão para os signos", "previsão para os 12 signos", "fase da lua",
-  "lua hoje", "mapa astral",
-  // Comercial
-  "patrocinado", "publipost", "publieditorial", "branded content",
-  "oferta", "cupom", "desconto exclusivo", "black friday",
-  "compre agora", "link de afiliado", "sorteio", "em oferta",
-  // Entretenimento / Fofoca / Reality / Cultura pop
-  "bbb 26", "bbb 25", "big brother", "reality show",
-  "fofoca", "celebridade", "ex-namorada de", "ex-namorado de",
-  "ivete sangalo", "larissa manoela", "ticiane pinheiro",
-  "solange couto", "leo lins", "andré frambach",
-  "peça de teatro", "espetáculo",
-  "trilha sonora", "o agente secreto",
-  // Esportes (não relacionados a liderança/educação)
-  "fórmula 1", "formula 1", "gp da austr", "arnold classic",
-  "fisiculturismo", "campeonato paulista", "palmeiras",
-  "futebol ao vivo", "jogos de hoje", "onde assistir",
-  "men's physique", "bikini", "bodybuilding",
-  "russell vence", "bortoleto",
-  // Lifestyle genérico
-  "receita de", "dieta de", "emagreça",
-  "ar-condicionado", "leite de vaca para gato",
-  "água quente pode congelar", "motor turbo",
-  "mouse attack shark",
-  // Fait divers / Policiais genéricos
-  "arrastado por enxurrada", "enxurrada em",
-  "temporal em", "temporais devem",
-  "previsão do tempo", "previsão para",
-  "morte de apresentador", "anuncia morte",
-  "iate de luxo", "vorcaro gastou",
-  "academia pioneira", "gaviões 24h",
-  "grande sertão, 70", "guimarães rosa",
-  "mirian goldenberg",
-  // Guerra/geopolítica genérica (não relacionada a liderança/tech)
-  "assembleia de especialistas do irã",
-  "líder supremo do irã", "khamenei",
-  "colonos israelenses", "cisjordânia",
-  "bombardeios", "beirute",
-  "guerra no oriente médio",
-];
-
-// Relevance: articles must match at least one of these terms to be kept
-const RELEVANCE_TERMS = [
-  // Tecnologia
-  "tecnologia", "tech", "digital", "inteligência artificial", "ia ", " ia,", " ia.",
-  "software", "hardware", "dados", "algoritmo", "startup", "inovação",
-  "cibersegurança", "internet", "plataforma", "automação", "robô",
-  "machine learning", "deep learning", "computação", "nuvem", "cloud",
-  "5g", "semicondutor", "chip", "blockchain", "metaverso",
-  "acessibilidade digital", "inclusão digital", "transformação digital",
-  "apagão de internet", "tecnoabsolutismo",
-  // Educação
-  "educação", "ensino", "escola", "universidade", "professor", "aluno",
-  "aprendizagem", "pedagog", "currículo", "enem", "vestibular",
-  "pesquisa", "pesquisador", "ciência", "científic", "acadêmic",
-  "doutorado", "mestrado", "bolsa de estudo", "capes", "cnpq",
-  "analfabet", "letramento", "formação", "capacitação",
-  // Liderança
-  "liderança", "líder", "gestão", "governança", "política pública",
-  "governo", "congresso", "senado", "câmara", "ministro", "presidente",
-  "reforma", "regulação", "legislação", "lei ", "projeto de lei",
-  "democracia", "direitos", "constituição", "supremo", "stf",
-  "eleição", "eleições", "voto", "mandate",
-  // Equidade racial
-  "equidade racial", "racismo", "racial", "negro", "negra", "preto", "preta",
-  "quilombo", "afro", "antirracis", "discriminação",
-  "diversidade", "inclusão", "igualdade", "gênero",
-  "feminismo", "feminicídio", "violência contra a mulher", "violência doméstica",
-  "mulher", "mulheres", "desigualdade", "vulnerável", "vulnerabilidade",
-  "favela", "periferia", "comunidade", "direitos humanos",
-  "trabalho", "emprego", "salário", "renda", "pobreza",
-  "saúde pública", "sus", "acesso", "política social",
-  "bpc", "deficiência",
-];
-
 export interface FetchProgress {
   stage: "idle" | "fetching_feeds" | "parsing" | "saving" | "done";
   message: string;
@@ -110,9 +31,24 @@ export function useArticles() {
         .from("articles")
         .select("*, feeds(name, topic_id, topics(name)), votes(vote)")
         .eq("is_deleted", false)
-        .order("relevance_score", { ascending: false })
         .order("published_at", { ascending: false })
         .limit(200);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Triage-specific query: only pending/new articles without summary
+  const triageQuery = useQuery({
+    queryKey: ["triage-articles"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("articles")
+        .select("*, feeds(name, topic_id, topics(name))")
+        .eq("is_deleted", false)
+        .is("summary", null)
+        .order("published_at", { ascending: false })
+        .limit(100);
       if (error) throw error;
       return data;
     },
@@ -125,11 +61,13 @@ export function useArticles() {
         { count: totalArticles },
         { count: summarizedArticles },
         { count: activeFeeds },
+        { count: pendingTriage },
         { data: avgData },
       ] = await Promise.all([
         supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false),
         supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false).not("summary", "is", null),
         supabase.from("feeds").select("*", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("articles").select("*", { count: "exact", head: true }).eq("is_deleted", false).is("summary", null),
         supabase.from("articles").select("relevance_score").eq("is_deleted", false).not("relevance_score", "eq", 0),
       ]);
       const avgScore = avgData && avgData.length > 0
@@ -139,6 +77,7 @@ export function useArticles() {
         totalArticles: totalArticles || 0,
         summarizedArticles: summarizedArticles || 0,
         activeFeeds: activeFeeds || 0,
+        pendingTriage: pendingTriage || 0,
         avgRelevanceScore: Math.round(avgScore * 10) / 10,
         votedArticles: avgData?.length || 0,
       };
@@ -160,6 +99,11 @@ export function useArticles() {
         return;
       }
 
+      // Load filter terms from DB
+      const { data: filterTerms } = await supabase.from("filter_terms").select("type, term");
+      const blocklistTerms = (filterTerms || []).filter(t => t.type === "blocklist").map(t => t.term);
+      const relevanceTerms = (filterTerms || []).filter(t => t.type === "relevance").map(t => t.term);
+
       setFetchProgress({ stage: "parsing", message: `Buscando notícias de ${feeds.length} feeds...`, percent: 30 });
 
       const { data, error } = await supabase.functions.invoke("fetch-news", {
@@ -171,15 +115,14 @@ export function useArticles() {
 
       setFetchProgress({ stage: "saving", message: `Salvando ${data.items.length} artigos...`, percent: 70 });
 
-      // Batch insert - much faster than individual inserts
-      // Filter out off-topic/commercial articles using blocklist + relevance check
       const articlesToInsert = data.items
         .filter((item: any) => {
           const text = `${item.title} ${item.description || ""}`.toLowerCase();
-          // First: reject blocklisted terms
-          if (BLOCKLIST_TERMS.some(term => text.includes(term))) return false;
-          // Second: must match at least one relevance term
-          return RELEVANCE_TERMS.some(term => text.includes(term));
+          if (blocklistTerms.some(term => text.includes(term))) return false;
+          if (relevanceTerms.length > 0) {
+            return relevanceTerms.some(term => text.includes(term));
+          }
+          return true;
         })
         .map((item: any) => {
           const feed = feeds.find(f => f.name === item.sourceName);
@@ -193,7 +136,6 @@ export function useArticles() {
           };
         });
 
-      // Insert in batches of 50, ignoring duplicates
       let inserted = 0;
       const batchSize = 50;
       for (let i = 0; i < articlesToInsert.length; i += batchSize) {
@@ -211,12 +153,12 @@ export function useArticles() {
       }
 
       setFetchProgress({ stage: "done", message: "Concluído!", percent: 100 });
-
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["triage-articles"] });
       queryClient.invalidateQueries({ queryKey: ["article-stats"] });
       toast({
         title: "Notícias atualizadas!",
-        description: `${inserted} novos artigos de ${feeds.length} feeds. ${data.errors?.length || 0} erros.`,
+        description: `${inserted} novos artigos de ${feeds.length} feeds.`,
       });
     } catch (e) {
       toast({ title: "Erro ao buscar notícias", description: e instanceof Error ? e.message : "Erro desconhecido", variant: "destructive" });
@@ -252,15 +194,15 @@ export function useArticles() {
 
       setSummarizeProgress({ stage: "saving", message: "Salvando resumos...", current: data.summaries.length, total: articles.length });
 
-      // Batch update summaries
       for (const s of data.summaries) {
         await supabase.from("articles").update({ summary: s.summary }).eq("id", s.id);
       }
 
       setSummarizeProgress({ stage: "done", message: "Concluído!", current: data.summaries.length, total: articles.length });
-
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["triage-articles"] });
       queryClient.invalidateQueries({ queryKey: ["article-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["summarized-articles"] });
       toast({ title: `${data.summaries.length} resumos gerados!` });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro desconhecido";
@@ -291,50 +233,42 @@ export function useArticles() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["triage-articles"] });
       queryClient.invalidateQueries({ queryKey: ["article-stats"] });
     },
   });
 
-  const cleanupIrrelevant = useCallback(async () => {
-    const { data: allArticles, error } = await supabase
-      .from("articles")
-      .select("id, title, description")
-      .eq("is_deleted", false);
-    
-    if (error || !allArticles) {
-      toast({ title: "Erro ao buscar artigos", variant: "destructive" });
-      return 0;
-    }
+  const approveArticle = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("articles").update({ ai_review_status: "approved" }).eq("id", id);
+      if (error) throw error;
+      // Also register a positive vote for learning
+      await supabase.from("votes").upsert({ article_id: id, vote: 1 }, { onConflict: "article_id" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["triage-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["article-stats"] });
+    },
+  });
 
-    const toDelete: string[] = [];
-    for (const a of allArticles) {
-      const text = `${a.title} ${a.description || ""}`.toLowerCase();
-      const isBlocked = BLOCKLIST_TERMS.some(term => text.includes(term));
-      const isRelevant = RELEVANCE_TERMS.some(term => text.includes(term));
-      if (isBlocked || !isRelevant) {
-        toDelete.push(a.id);
-      }
-    }
-
-    if (toDelete.length === 0) {
-      toast({ title: "Todos os artigos já estão alinhados!" });
-      return 0;
-    }
-
-    // Soft-delete in batches
-    for (let i = 0; i < toDelete.length; i += 50) {
-      const batch = toDelete.slice(i, i + 50);
-      await supabase.from("articles").update({ is_deleted: true }).in("id", batch);
-    }
-
-    queryClient.invalidateQueries({ queryKey: ["articles"] });
-    queryClient.invalidateQueries({ queryKey: ["article-stats"] });
-    toast({ title: `${toDelete.length} artigos irrelevantes removidos!` });
-    return toDelete.length;
-  }, [queryClient, toast]);
+  const rejectArticle = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("articles").update({ ai_review_status: "rejected", is_deleted: true }).eq("id", id);
+      if (error) throw error;
+      // Register negative vote for learning
+      await supabase.from("votes").upsert({ article_id: id, vote: -1 }, { onConflict: "article_id" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["articles"] });
+      queryClient.invalidateQueries({ queryKey: ["triage-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["article-stats"] });
+    },
+  });
 
   return {
     articlesQuery,
+    triageQuery,
     statsQuery,
     fetchNews,
     isFetching,
@@ -344,6 +278,7 @@ export function useArticles() {
     summarizeProgress,
     vote,
     softDelete,
-    cleanupIrrelevant,
+    approveArticle,
+    rejectArticle,
   };
 }
