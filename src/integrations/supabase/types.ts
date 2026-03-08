@@ -25,6 +25,7 @@ export type Database = {
           link: string
           published_at: string | null
           relevance_score: number
+          sent_to_newsletter: boolean
           source_name: string | null
           summary: string | null
           title: string
@@ -39,6 +40,7 @@ export type Database = {
           link: string
           published_at?: string | null
           relevance_score?: number
+          sent_to_newsletter?: boolean
           source_name?: string | null
           summary?: string | null
           title: string
@@ -53,6 +55,7 @@ export type Database = {
           link?: string
           published_at?: string | null
           relevance_score?: number
+          sent_to_newsletter?: boolean
           source_name?: string | null
           summary?: string | null
           title?: string
