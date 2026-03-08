@@ -250,13 +250,12 @@ export default function Insights() {
 
       <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
           <StatCard label="Processados" value={stats.totalAll} icon={Newspaper} accent="bg-muted text-muted-foreground" subtitle={`${stats.total} resumidos`} />
           <StatCard label="Descartados" value={stats.declined} icon={XCircle} accent="bg-destructive/10 text-destructive" subtitle={`${stats.approvalRate}% aprovação`} />
           <StatCard label="Curtidos" value={stats.liked} icon={ThumbsUp} accent="bg-accent/10 text-accent" />
           <StatCard label="Newsletter" value={stats.sentNewsletter} icon={Send} accent="bg-primary/10 text-primary" subtitle={stats.topNewsletterSource ? `Top: ${stats.topNewsletterSource[0]}` : undefined} />
           <StatCard label="Média palavras" value={stats.avgWords} icon={FileText} accent="bg-primary/10 text-primary" subtitle="por resumo" />
-          <StatCard label="Votos negativos" value={(votes || []).filter(v => v.vote < 0).length} icon={ThumbsUp} accent="bg-muted text-muted-foreground" subtitle="descartados manualmente" />
         </div>
 
         {/* Volume + Pillar row */}
