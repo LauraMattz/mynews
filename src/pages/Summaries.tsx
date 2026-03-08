@@ -220,6 +220,7 @@ export default function Summaries() {
               </p>
             </div>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 
