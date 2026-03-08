@@ -127,7 +127,7 @@ export default function Insights() {
 
     return {
       total, sentNewsletter, liked, avgScore, avgWords,
-      pillarData, sourceData, volumeData, topLiked, topAI,
+      pillarData, sourceData, volumeData, topLiked, topLongest,
     };
   }, [articles, votes]);
 
