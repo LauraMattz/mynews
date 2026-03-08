@@ -174,7 +174,9 @@ export function useArticles() {
       queryClient.invalidateQueries({ queryKey: ["article-stats"] });
       toast({
         title: "Notícias atualizadas!",
-        description: `${inserted} novos artigos de ${feeds.length} feeds.`,
+        description: inserted > 0
+          ? `${inserted} novos artigos salvos de ${feeds.length} feeds.`
+          : `Nenhum artigo novo encontrado (${articlesToInsert.length} já existiam).`,
       });
     } catch (e) {
       toast({ title: "Erro ao buscar notícias", description: e instanceof Error ? e.message : "Erro desconhecido", variant: "destructive" });
