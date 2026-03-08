@@ -27,6 +27,7 @@ export type Database = {
           is_deleted: boolean
           link: string
           published_at: string | null
+          recommendation_score: number | null
           relevance_score: number
           sent_to_newsletter: boolean
           source_name: string | null
@@ -45,6 +46,7 @@ export type Database = {
           is_deleted?: boolean
           link: string
           published_at?: string | null
+          recommendation_score?: number | null
           relevance_score?: number
           sent_to_newsletter?: boolean
           source_name?: string | null
@@ -63,6 +65,7 @@ export type Database = {
           is_deleted?: boolean
           link?: string
           published_at?: string | null
+          recommendation_score?: number | null
           relevance_score?: number
           sent_to_newsletter?: boolean
           source_name?: string | null
@@ -81,29 +84,35 @@ export type Database = {
       }
       feeds: {
         Row: {
+          approval_rate: number | null
           created_at: string
           id: string
           is_active: boolean
           name: string
           topic_id: string | null
+          total_articles: number | null
           updated_at: string
           url: string
         }
         Insert: {
+          approval_rate?: number | null
           created_at?: string
           id?: string
           is_active?: boolean
           name: string
           topic_id?: string | null
+          total_articles?: number | null
           updated_at?: string
           url: string
         }
         Update: {
+          approval_rate?: number | null
           created_at?: string
           id?: string
           is_active?: boolean
           name?: string
           topic_id?: string | null
+          total_articles?: number | null
           updated_at?: string
           url?: string
         }
@@ -193,7 +202,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      compute_recommendation_score: {
+        Args: {
+          p_ai_relevance_score: number
+          p_ai_review_status: string
+          p_published_at: string
+          p_relevance_score: number
+          p_source_approval_rate: number
+        }
+        Returns: number
+      }
+      recalculate_source_reputation: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
