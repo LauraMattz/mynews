@@ -277,6 +277,44 @@ export function useArticles() {
     },
   });
 
+  const cleanupIrrelevant = useCallback(async () => {
+    const { data: allArticles, error } = await supabase
+      .from("articles")
+      .select("id, title, description")
+      .eq("is_deleted", false);
+    
+    if (error || !allArticles) {
+      toast({ title: "Erro ao buscar artigos", variant: "destructive" });
+      return 0;
+    }
+
+    const toDelete: string[] = [];
+    for (const a of allArticles) {
+      const text = `${a.title} ${a.description || ""}`.toLowerCase();
+      const isBlocked = BLOCKLIST_TERMS.some(term => text.includes(term));
+      const isRelevant = RELEVANCE_TERMS.some(term => text.includes(term));
+      if (isBlocked || !isRelevant) {
+        toDelete.push(a.id);
+      }
+    }
+
+    if (toDelete.length === 0) {
+      toast({ title: "Todos os artigos já estão alinhados!" });
+      return 0;
+    }
+
+    // Soft-delete in batches
+    for (let i = 0; i < toDelete.length; i += 50) {
+      const batch = toDelete.slice(i, i + 50);
+      await supabase.from("articles").update({ is_deleted: true }).in("id", batch);
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["articles"] });
+    queryClient.invalidateQueries({ queryKey: ["article-stats"] });
+    toast({ title: `${toDelete.length} artigos irrelevantes removidos!` });
+    return toDelete.length;
+  }, [queryClient, toast]);
+
   return {
     articlesQuery,
     statsQuery,
@@ -288,5 +326,6 @@ export function useArticles() {
     summarizeProgress,
     vote,
     softDelete,
+    cleanupIrrelevant,
   };
 }
