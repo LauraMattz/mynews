@@ -75,7 +75,7 @@ export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummariz
                 rel="noopener noreferrer"
                 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-2 flex-1"
               >
-                {article.title}
+                {cleanTitle}
                 <ExternalLink className="inline-block ml-1 h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
             </div>
