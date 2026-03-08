@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Trash2, ExternalLink, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useMemo } from "react";
+
+function stripHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
 
 interface ArticleCardProps {
   article: {
@@ -27,6 +33,8 @@ interface ArticleCardProps {
 export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummarizing }: ArticleCardProps) {
   const currentVote = article.votes?.vote || 0;
   const topicName = article.feeds?.topics?.name;
+  const cleanTitle = useMemo(() => stripHtml(article.title), [article.title]);
+  const cleanDescription = useMemo(() => article.description ? stripHtml(article.description) : null, [article.description]);
 
   return (
     <Card className="group animate-fade-in hover:shadow-md transition-all duration-200">
@@ -67,7 +75,7 @@ export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummariz
                 rel="noopener noreferrer"
                 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-2 flex-1"
               >
-                {article.title}
+                {cleanTitle}
                 <ExternalLink className="inline-block ml-1 h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
             </div>
@@ -99,7 +107,7 @@ export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummariz
                 <p className="text-foreground/90 leading-relaxed">{article.summary}</p>
               </div>
             ) : article.description ? (
-              <p className="text-sm text-muted-foreground line-clamp-2">{article.description}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2">{cleanDescription}</p>
             ) : null}
 
             <div className="flex items-center gap-2 pt-1">
