@@ -16,7 +16,7 @@ interface ArticleCardProps {
     published_at: string | null;
     relevance_score: number;
     feeds: any;
-    votes: any[];
+    votes: any;
   };
   onVote: (articleId: string, vote: 1 | -1) => void;
   onDelete: (id: string) => void;
