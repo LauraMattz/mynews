@@ -18,7 +18,7 @@ export function DesktopNav() {
           <Newspaper className="h-4 w-4 text-primary-foreground" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-sm font-bold tracking-tight truncate">NewsFlow</h1>
+          <h1 className="text-sm font-bold tracking-tight truncate">MyNews</h1>
           <p className="text-[9px] text-muted-foreground leading-tight truncate">Curadoria inteligente</p>
         </div>
       </div>
