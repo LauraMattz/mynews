@@ -13,7 +13,7 @@ export function DesktopNav() {
 
   return (
     <nav className="hidden sm:block sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border">
-      <div className="max-w-5xl mx-auto px-4 flex items-center h-12 gap-1">
+      <div className="max-w-5xl mx-auto px-4 flex items-center justify-start h-12 gap-1">
         {navItems.map(({ path, label, icon: Icon }) => {
           const active = location.pathname === path;
           return (
