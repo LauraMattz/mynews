@@ -15,8 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   RefreshCw, Search, Newspaper, ThumbsDown,
-  Inbox, SlidersHorizontal, Sparkles, Link2, Loader2,
-} from "lucide-react";
+  Inbox, SlidersHorizontal, Sparkles, Link2, Loader2 } from
+"lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { TriageSkeletons } from "@/components/SkeletonCards";
@@ -30,7 +30,7 @@ const Index = () => {
   const {
     triageQuery, statsQuery, fetchNews, isFetching, fetchProgress,
     summarizeArticles, isSummarizing, summarizeProgress,
-    approveArticle, rejectArticle,
+    approveArticle, rejectArticle
   } = useArticles();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -44,22 +44,22 @@ const Index = () => {
     if (!linkInput.trim()) return;
     setIsGenerating(true);
     try {
-      const { data: inserted, error: insertErr } = await supabase
-        .from("articles")
-        .upsert(
-          { link: linkInput.trim(), title: "Carregando...", source_name: "Link manual" },
-          { onConflict: "link", ignoreDuplicates: false }
-        )
-        .select("id, title, description")
-        .single();
+      const { data: inserted, error: insertErr } = await supabase.
+      from("articles").
+      upsert(
+        { link: linkInput.trim(), title: "Carregando...", source_name: "Link manual" },
+        { onConflict: "link", ignoreDuplicates: false }
+      ).
+      select("id, title, description").
+      single();
       if (insertErr) throw insertErr;
 
       const { data, error } = await supabase.functions.invoke("summarize-news", {
         body: {
           articles: [
-            { id: inserted.id, title: inserted.title, description: inserted.description || linkInput },
-          ],
-        },
+          { id: inserted.id, title: inserted.title, description: inserted.description || linkInput }]
+
+        }
       });
       if (error) throw error;
       if (data.summaries?.length > 0) {
@@ -75,7 +75,7 @@ const Index = () => {
       toast({
         title: "Erro ao gerar resumo",
         description: e instanceof Error ? e.message : "Erro desconhecido",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsGenerating(false);
@@ -87,19 +87,19 @@ const Index = () => {
 
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
-    return triageArticles.filter(a => {
+    return triageArticles.filter((a) => {
       return !s ||
-        a.title.toLowerCase().includes(s) ||
-        a.description?.toLowerCase().includes(s) ||
-        a.source_name?.toLowerCase().includes(s);
+      a.title.toLowerCase().includes(s) ||
+      a.description?.toLowerCase().includes(s) ||
+      a.source_name?.toLowerCase().includes(s);
     });
   }, [triageArticles, search]);
 
   const toggleSelect = (id: string) => {
-    setSelected(prev => {
+    setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) next.delete(id);else
+      next.add(id);
       return next;
     });
   };
@@ -108,7 +108,7 @@ const Index = () => {
     if (selected.size === filtered.length) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(filtered.map(a => a.id)));
+      setSelected(new Set(filtered.map((a) => a.id)));
     }
   };
 
@@ -121,7 +121,7 @@ const Index = () => {
     setSelected(new Set());
     toast({
       title: `${ids.length} artigos descartados`,
-      description: "Feedback registrado para melhorar recomendações.",
+      description: "Feedback registrado para melhorar recomendações."
     });
   };
 
@@ -138,7 +138,7 @@ const Index = () => {
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-xl font-bold tracking-tight truncate">MyNews</h1>
                 <p className="text-[10px] sm:text-[11px] text-muted-foreground leading-tight truncate">
-                  Curadoria inteligente · <a href="https://www.linkedin.com/in/lauramattosc/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Laura Mattos</a>
+                  Curadoria inteligente · <a href="https://www.linkedin.com/in/lauramattosc/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Criado por Laura Mattos</a>
                 </p>
               </div>
             </div>
@@ -187,8 +187,8 @@ const Index = () => {
                       onChange={(e) => setLinkInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handlePasteLink()}
                       disabled={isGenerating}
-                      className="h-9 text-sm"
-                    />
+                      className="h-9 text-sm" />
+                    
                     <Button onClick={handlePasteLink} disabled={isGenerating || !linkInput.trim()} className="h-9 px-3 shrink-0">
                       {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                       <span className="ml-1">Gerar</span>
@@ -201,8 +201,8 @@ const Index = () => {
                   <Button
                     disabled={isFetching}
                     size="sm"
-                    className="gap-1 h-8 px-2 sm:px-3 shadow-sm"
-                  >
+                    className="gap-1 h-8 px-2 sm:px-3 shadow-sm">
+                    
                     <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                     <span className="hidden sm:inline">Buscar</span>
                   </Button>
@@ -217,9 +217,9 @@ const Index = () => {
                         min={1}
                         max={500}
                         value={fetchLimit}
-                        onChange={e => setFetchLimit(e.target.value)}
-                        className="h-8 text-sm"
-                      />
+                        onChange={(e) => setFetchLimit(e.target.value)}
+                        className="h-8 text-sm" />
+                      
                       <p className="text-[10px] text-muted-foreground">Deixe vazio para trazer todos.</p>
                     </div>
                     <Button
@@ -230,8 +230,8 @@ const Index = () => {
                       }}
                       disabled={isFetching}
                       size="sm"
-                      className="w-full gap-1.5"
-                    >
+                      className="w-full gap-1.5">
+                      
                       <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
                       Buscar Notícias
                     </Button>
@@ -248,14 +248,14 @@ const Index = () => {
         <PipelineProgress fetchProgress={fetchProgress} summarizeProgress={summarizeProgress} />
 
         {/* Stats */}
-        {stats && (
-          <StatsBar
-            activeFeeds={stats.activeFeeds}
-            totalArticles={stats.totalArticles}
-            sentToNewsletter={stats.sentToNewsletter}
-            pendingTriage={stats.pendingTriage}
-          />
-        )}
+        {stats &&
+        <StatsBar
+          activeFeeds={stats.activeFeeds}
+          totalArticles={stats.totalArticles}
+          sentToNewsletter={stats.sentToNewsletter}
+          pendingTriage={stats.pendingTriage} />
+
+        }
 
         {/* Tabs */}
         {/* Search */}
@@ -264,9 +264,9 @@ const Index = () => {
           <Input
             placeholder="Buscar artigos..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-9 sm:h-10 text-sm"
-          />
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 sm:h-10 text-sm" />
+          
         </div>
 
         {/* Action bar */}
@@ -274,87 +274,87 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <Checkbox
               checked={filtered.length > 0 && selected.size === filtered.length}
-              onCheckedChange={toggleSelectAll}
-            />
+              onCheckedChange={toggleSelectAll} />
+            
             <span className="text-xs sm:text-sm text-muted-foreground">
               {selected.size > 0 ? `${selected.size} sel.` : `${filtered.length} artigos`}
             </span>
           </div>
-          {selected.size > 0 && (
-            <div className="flex items-center gap-2">
+          {selected.size > 0 &&
+          <div className="flex items-center gap-2">
               <Button
-                onClick={() => {
-                  const ids = Array.from(selected);
-                  summarizeArticles(ids);
-                  setSelected(new Set());
-                  toast({ title: `Gerando resumo de ${ids.length} artigos...` });
-                }}
-                size="sm"
-                variant="outline"
-                disabled={isSummarizing}
-                className="gap-1 text-xs h-8 text-primary hover:text-primary border-primary/30"
-              >
+              onClick={() => {
+                const ids = Array.from(selected);
+                summarizeArticles(ids);
+                setSelected(new Set());
+                toast({ title: `Gerando resumo de ${ids.length} artigos...` });
+              }}
+              size="sm"
+              variant="outline"
+              disabled={isSummarizing}
+              className="gap-1 text-xs h-8 text-primary hover:text-primary border-primary/30">
+              
                 <Sparkles className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Resumir</span> {selected.size}
               </Button>
               <Button
-                onClick={handleBulkDiscard}
-                size="sm"
-                variant="outline"
-                className="gap-1 text-xs h-8 text-destructive hover:text-destructive border-destructive/30"
-              >
+              onClick={handleBulkDiscard}
+              size="sm"
+              variant="outline"
+              className="gap-1 text-xs h-8 text-destructive hover:text-destructive border-destructive/30">
+              
                 <ThumbsDown className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Descartar</span> {selected.size}
               </Button>
             </div>
-          )}
+          }
         </div>
 
         {/* Articles */}
         <div className="space-y-2 sm:space-y-3">
-          {filtered.map(article => (
-            <TriageCard
-              key={article.id}
-              article={article}
-              selected={selected.has(article.id)}
-              onToggleSelect={toggleSelect}
-              onApprove={id => approveArticle.mutate(id)}
-              onReject={id => rejectArticle.mutate(id)}
-              onGenerateSummary={id => summarizeArticles([id])}
-              isSummarizing={isSummarizing}
-            />
-          ))}
+          {filtered.map((article) =>
+          <TriageCard
+            key={article.id}
+            article={article}
+            selected={selected.has(article.id)}
+            onToggleSelect={toggleSelect}
+            onApprove={(id) => approveArticle.mutate(id)}
+            onReject={(id) => rejectArticle.mutate(id)}
+            onGenerateSummary={(id) => summarizeArticles([id])}
+            isSummarizing={isSummarizing} />
+
+          )}
         </div>
 
         {/* Empty state */}
-        {filtered.length === 0 && !triageQuery.isLoading && (
-          <div className="text-center py-16 sm:py-20 space-y-3">
+        {filtered.length === 0 && !triageQuery.isLoading &&
+        <div className="text-center py-16 sm:py-20 space-y-3">
             <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-muted flex items-center justify-center mx-auto">
               <Inbox className="h-7 w-7 sm:h-8 sm:w-8 text-muted-foreground/40" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-semibold text-muted-foreground">Nenhum artigo para triar</h2>
               <p className="text-xs sm:text-sm text-muted-foreground/70 mt-1 max-w-sm mx-auto">
-                {triageArticles.length === 0
-                  ? 'Clique em "Buscar Notícias" para coletar artigos.'
-                  : "Tente ajustar os filtros."}
+                {triageArticles.length === 0 ?
+              'Clique em "Buscar Notícias" para coletar artigos.' :
+              "Tente ajustar os filtros."}
               </p>
             </div>
-            {triageArticles.length === 0 && (
-              <Button onClick={() => fetchNews()} disabled={isFetching} className="gap-1.5">
+            {triageArticles.length === 0 &&
+          <Button onClick={() => fetchNews()} disabled={isFetching} className="gap-1.5">
                 <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                 Buscar Notícias
               </Button>
-            )}
+          }
           </div>
-        )}
+        }
 
-        {triageQuery.isLoading && (
-          <TriageSkeletons count={5} />
-        )}
+        {triageQuery.isLoading &&
+        <TriageSkeletons count={5} />
+        }
       </main>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Index;
