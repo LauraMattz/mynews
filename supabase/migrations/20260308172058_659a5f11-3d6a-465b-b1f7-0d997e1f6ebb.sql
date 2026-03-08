@@ -1,0 +1,1 @@
+UPDATE articles SET is_deleted = true WHERE is_deleted = false AND published_at < now() - interval '5 days'
