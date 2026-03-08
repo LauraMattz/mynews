@@ -53,11 +53,23 @@ export default function About() {
       </div>
 
       {/* Footer */}
-      <div className="text-center pt-4 border-t border-border">
+      <div className="text-center pt-4 border-t border-border space-y-1">
         <p className="text-sm text-muted-foreground">
           Feito com{" "}
           <Heart className="inline h-3.5 w-3.5 text-red-500 fill-red-500" />{" "}
-          pela comunidade —{" "}
+          pela comunidade
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Criado por{" "}
+          <a
+            href="https://www.linkedin.com/in/lauramattosc/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline font-medium"
+          >
+            Laura Mattos
+          </a>
+          {" · "}
           <a
             href="https://github.com/LauraMattz/mynews"
             target="_blank"
@@ -65,7 +77,7 @@ export default function About() {
             className="text-primary hover:underline font-medium inline-flex items-center gap-1"
           >
             <Github className="h-3.5 w-3.5" />
-            Contribua no GitHub
+            GitHub
           </a>
         </p>
       </div>
