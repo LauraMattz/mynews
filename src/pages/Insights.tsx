@@ -135,8 +135,10 @@ export default function Insights() {
     const total = articles.length;
     const sentNewsletter = articles.filter(a => a.sent_to_newsletter).length;
     const liked = articles.filter(a => (voteMap.get(a.id) || 0) > 0).length;
-    const declined = (allArticlesForStatus || []).filter(a => a.ai_review_status === "rejected").length;
-    const totalAll = (allArticlesForStatus || []).length;
+    const allItems = allArticlesForStatus || [];
+    const totalAll = allItems.length;
+    const declined = allItems.filter(a => a.is_deleted).length;
+    const aiRejected = allItems.filter(a => a.ai_review_status === "rejected").length;
     const approvalRate = totalAll > 0 ? Math.round(((totalAll - declined) / totalAll) * 100) : 0;
 
     // Pillar distribution
