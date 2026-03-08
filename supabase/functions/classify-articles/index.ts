@@ -177,7 +177,6 @@ ACEITE artigos que tenham conexão clara com pelo menos um dos 4 pilares, mesmo 
         classified: results.length,
         approved: results.filter(r => r.status === "approved").length,
         rejected: results.filter(r => r.status === "rejected").length,
-        softDeleted,
         results,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
