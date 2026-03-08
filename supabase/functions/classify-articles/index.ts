@@ -12,7 +12,13 @@ serve(async (req) => {
   }
 
   try {
-    const { articleIds } = await req.json();
+    let articleIds: string[] | undefined;
+    try {
+      const body = await req.json();
+      articleIds = body?.articleIds;
+    } catch {
+      // No body or invalid JSON — classify all pending
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
