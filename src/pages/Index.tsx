@@ -98,6 +98,15 @@ const Index = () => {
                 variant="outline"
                 size="sm"
                 className="gap-1 h-8 px-2 sm:px-3"
+                onClick={() => navigate("/insights")}
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Insights</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 h-8 px-2 sm:px-3"
                 onClick={() => navigate("/resumos")}
               >
                 <FileText className="h-4 w-4" />
