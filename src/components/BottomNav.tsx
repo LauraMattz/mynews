@@ -1,10 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Inbox, FileText, BarChart3 } from "lucide-react";
+import { Inbox, FileText, BarChart3, Info } from "lucide-react";
 
 const navItems = [
   { path: "/", label: "Triagem", icon: Inbox },
   { path: "/resumos", label: "Resumos", icon: FileText },
   { path: "/insights", label: "Insights", icon: BarChart3 },
+  { path: "/sobre", label: "Sobre", icon: Info },
 ];
 
 export function BottomNav() {
