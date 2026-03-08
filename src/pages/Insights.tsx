@@ -118,8 +118,7 @@ export default function Insights() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("articles")
-        .select("id, ai_review_status")
-        .eq("is_deleted", false);
+        .select("id, ai_review_status, is_deleted");
       if (error) throw error;
       return data || [];
     },
