@@ -45,15 +45,15 @@ function parseRSS(xml: string, sourceName: string): FeedItem[] {
     }
   }
   
-  // Also try Atom format (entry instead of item)
   const entryRegex = /<entry>([\s\S]*?)<\/entry>/gi;
   while ((match = entryRegex.exec(xml)) !== null) {
     const entryXml = match[1];
     
-    const title = entryXml.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim() || '';
+    const title = decodeHtmlEntities(entryXml.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').trim() || '');
     const link = entryXml.match(/<link[^>]*href="([^"]*)"[^>]*\/?>/i)?.[1]?.trim() ||
                  entryXml.match(/<link[^>]*>([\s\S]*?)<\/link>/i)?.[1]?.trim() || '';
-    const summary = entryXml.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i)?.[1]?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/<[^>]*>/g, '').trim() || '';
+    const rawSummary = entryXml.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i)?.[1]?.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/<[^>]*>/g, '').trim() || '';
+    const summary = decodeHtmlEntities(rawSummary);
     const updated = entryXml.match(/<updated[^>]*>([\s\S]*?)<\/updated>/i)?.[1]?.trim() ||
                     entryXml.match(/<published[^>]*>([\s\S]*?)<\/published>/i)?.[1]?.trim() || null;
     
