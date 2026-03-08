@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.summarize-news]
 verify_jwt = false
+
+[functions.classify-articles]
+verify_jwt = false
