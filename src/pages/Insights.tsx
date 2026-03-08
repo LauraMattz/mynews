@@ -55,6 +55,18 @@ export default function Insights() {
     },
   });
 
+  const { data: allArticlesForStatus } = useQuery({
+    queryKey: ["insights-all-status"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("articles")
+        .select("id, ai_review_status")
+        .eq("is_deleted", false);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const stats = useMemo(() => {
     if (!articles) return null;
 
@@ -66,9 +78,9 @@ export default function Insights() {
     const total = articles.length;
     const sentNewsletter = articles.filter(a => a.sent_to_newsletter).length;
     const liked = articles.filter(a => (voteMap.get(a.id) || 0) > 0).length;
-    const avgScore = total > 0
-      ? Math.round(articles.reduce((sum, a) => sum + (a.ai_relevance_score || 0), 0) / total * 10) / 10
-      : 0;
+
+    // Declined count from all articles
+    const declined = (allArticlesForStatus || []).filter(a => a.ai_review_status === "rejected").length;
 
     // Pillar distribution
     const pillarCounts: Record<string, number> = {};
@@ -80,6 +92,19 @@ export default function Insights() {
     const pillarData = Object.entries(pillarCounts)
       .map(([name, value]) => ({ name: PILLAR_LABELS[name] || name, value }))
       .sort((a, b) => b.value - a.value);
+
+    // Topic distribution (from feeds -> topics)
+    const topicCounts: Record<string, number> = {};
+    for (const a of articles) {
+      const feed = a.feeds as any;
+      const topicName = feed?.topics?.name;
+      if (topicName) {
+        topicCounts[topicName] = (topicCounts[topicName] || 0) + 1;
+      }
+    }
+    const topicData = Object.entries(topicCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
 
     // Source distribution (top 8)
     const sourceCounts: Record<string, number> = {};
@@ -113,23 +138,22 @@ export default function Insights() {
       .sort((a, b) => b.voteScore - a.voteScore)
       .slice(0, 5);
 
-    // Longest summaries (most complete)
+    // Longest summaries
     const topLongest = articles
       .map(a => ({ ...a, wordCount: a.summary?.split(/\s+/).filter(w => w.length > 0).length || 0 }))
       .sort((a, b) => b.wordCount - a.wordCount)
       .slice(0, 5);
 
-    // Average words per summary
     const totalWords = articles.reduce((sum, a) => {
       return sum + (a.summary?.split(/\s+/).filter(w => w.length > 0).length || 0);
     }, 0);
     const avgWords = total > 0 ? Math.round(totalWords / total) : 0;
 
     return {
-      total, sentNewsletter, liked, avgScore, avgWords,
-      pillarData, sourceData, volumeData, topLiked, topLongest,
+      total, sentNewsletter, liked, declined, avgWords,
+      pillarData, topicData, sourceData, volumeData, topLiked, topLongest,
     };
-  }, [articles, votes]);
+  }, [articles, votes, allArticlesForStatus]);
 
   if (isLoading || !stats) {
     return (
