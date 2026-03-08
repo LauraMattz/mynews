@@ -116,7 +116,7 @@ export function useArticles() {
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
 
-      setFetchProgress({ stage: "saving", message: `Salvando ${data.items.length} artigos...`, percent: 70 });
+      setFetchProgress({ stage: "saving", message: `Filtrando artigos...`, percent: 60 });
 
       const articlesToInsert = data.items
         .filter((item: any) => {
@@ -139,7 +139,18 @@ export function useArticles() {
           };
         });
 
-      const finalArticles = limit && limit > 0 ? articlesToInsert.slice(0, limit) : articlesToInsert;
+      // Filter out articles that already exist in DB
+      const links = articlesToInsert.map(a => a.link);
+      const { data: existingLinks } = await supabase
+        .from("articles")
+        .select("link")
+        .in("link", links);
+      const existingSet = new Set((existingLinks || []).map(e => e.link));
+      const newArticles = articlesToInsert.filter(a => !existingSet.has(a.link));
+
+      const finalArticles = limit && limit > 0 ? newArticles.slice(0, limit) : newArticles;
+
+      setFetchProgress({ stage: "saving", message: `Salvando ${finalArticles.length} novos artigos (${newArticles.length} disponíveis)...`, percent: 70 });
 
       let inserted = 0;
       const batchSize = 50;
@@ -163,7 +174,9 @@ export function useArticles() {
       queryClient.invalidateQueries({ queryKey: ["article-stats"] });
       toast({
         title: "Notícias atualizadas!",
-        description: `${inserted} novos artigos de ${feeds.length} feeds.`,
+        description: inserted > 0
+          ? `${inserted} novos artigos salvos de ${feeds.length} feeds.`
+          : `Nenhum artigo novo encontrado (${articlesToInsert.length} já existiam).`,
       });
     } catch (e) {
       toast({ title: "Erro ao buscar notícias", description: e instanceof Error ? e.message : "Erro desconhecido", variant: "destructive" });
