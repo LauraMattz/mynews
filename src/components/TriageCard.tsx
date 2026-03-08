@@ -230,8 +230,10 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
               </div>
 
               {/* Swipe hint — mobile only */}
-              <p className="text-[9px] text-muted-foreground/40 sm:hidden select-none">
-                ← descartar · aprovar →
+              <p className="text-[10px] text-muted-foreground/50 sm:hidden select-none flex items-center gap-1.5">
+                <span className="text-destructive/60 font-semibold">← descartar</span>
+                <span className="text-muted-foreground/30">·</span>
+                <span className="text-emerald-500/60 font-semibold">aprovar →</span>
               </p>
             </div>
 
