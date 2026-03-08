@@ -60,7 +60,7 @@ const PILLAR_LABELS: Record<string, string> = {
 };
 
 export default function Summaries() {
-  const navigate = useNavigate();
+  const { toast } = useToast();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
