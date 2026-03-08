@@ -176,19 +176,14 @@ export default function Insights() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                Insights
-              </h1>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">
-                Análise dos {stats.total} resumos gerados
-              </p>
-            </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Insights
+            </h1>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Análise dos {stats.total} resumos gerados
+            </p>
           </div>
           <ThemeToggle />
         </div>
