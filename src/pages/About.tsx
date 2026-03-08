@@ -44,7 +44,7 @@ export default function About() {
         <Section icon={Eye} title="Como Funciona">
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li>Coletamos notícias via feeds RSS de fontes públicas brasileiras</li>
-            <li>Filtramos conteúdo irrelevante (horóscopo, fofocas, esportes, anúncios)</li>
+            <li>Filtramos conteúdo irrelevante para esse fim (horóscopo, fofocas, esportes, anúncios)</li>
             <li>IA classifica cada artigo nos 4 pilares temáticos com score de relevância</li>
             <li>Resumos estruturados são gerados automaticamente para os artigos aprovados</li>
             <li>Você faz a triagem final com votos 👍/👎 para refinar as recomendações</li>
@@ -52,19 +52,19 @@ export default function About() {
         </Section>
       </div>
 
-    </div>
-  );
+    </div>);
+
 }
 
 function Section({
   icon: Icon,
   title,
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  children: React.ReactNode;
-}) {
+  children
+
+
+
+
+}: {icon: React.ElementType;title: string;children: React.ReactNode;}) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -76,6 +76,6 @@ function Section({
       <div className="text-sm text-muted-foreground leading-relaxed pl-10">
         {children}
       </div>
-    </div>
-  );
+    </div>);
+
 }
