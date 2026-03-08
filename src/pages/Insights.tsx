@@ -113,9 +113,10 @@ export default function Insights() {
       .sort((a, b) => b.voteScore - a.voteScore)
       .slice(0, 5);
 
-    // Top AI scored
-    const topAI = [...articles]
-      .sort((a, b) => (b.ai_relevance_score || 0) - (a.ai_relevance_score || 0))
+    // Longest summaries (most complete)
+    const topLongest = articles
+      .map(a => ({ ...a, wordCount: a.summary?.split(/\s+/).filter(w => w.length > 0).length || 0 }))
+      .sort((a, b) => b.wordCount - a.wordCount)
       .slice(0, 5);
 
     // Average words per summary
