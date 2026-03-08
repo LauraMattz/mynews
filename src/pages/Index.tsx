@@ -18,7 +18,9 @@ const Index = () => {
   const {
     articlesQuery, statsQuery, fetchNews, isFetching, fetchProgress,
     summarizeArticles, isSummarizing, summarizeProgress, vote, softDelete,
+    cleanupIrrelevant,
   } = useArticles();
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [search, setSearch] = useState("");
   const [topicFilter, setTopicFilter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
