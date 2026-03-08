@@ -13,21 +13,39 @@ const BLOCKLIST_TERMS = [
   "patrocinado", "publipost", "publieditorial", "branded content",
   "oferta", "cupom", "desconto exclusivo", "black friday",
   "compre agora", "link de afiliado", "sorteio", "em oferta",
-  // Entretenimento / Fofoca / Reality
+  // Entretenimento / Fofoca / Reality / Cultura pop
   "bbb 26", "bbb 25", "big brother", "reality show",
   "fofoca", "celebridade", "ex-namorada de", "ex-namorado de",
   "ivete sangalo", "larissa manoela", "ticiane pinheiro",
-  "solange couto", "leo lins",
+  "solange couto", "leo lins", "andré frambach",
+  "peça de teatro", "espetáculo",
+  "trilha sonora", "o agente secreto",
   // Esportes (não relacionados a liderança/educação)
   "fórmula 1", "formula 1", "gp da austr", "arnold classic",
   "fisiculturismo", "campeonato paulista", "palmeiras",
   "futebol ao vivo", "jogos de hoje", "onde assistir",
   "men's physique", "bikini", "bodybuilding",
+  "russell vence", "bortoleto",
   // Lifestyle genérico
   "receita de", "dieta de", "emagreça",
   "ar-condicionado", "leite de vaca para gato",
   "água quente pode congelar", "motor turbo",
   "mouse attack shark",
+  // Fait divers / Policiais genéricos
+  "arrastado por enxurrada", "enxurrada em",
+  "temporal em", "temporais devem",
+  "previsão do tempo", "previsão para",
+  "morte de apresentador", "anuncia morte",
+  "iate de luxo", "vorcaro gastou",
+  "academia pioneira", "gaviões 24h",
+  "grande sertão, 70", "guimarães rosa",
+  "mirian goldenberg",
+  // Guerra/geopolítica genérica (não relacionada a liderança/tech)
+  "assembleia de especialistas do irã",
+  "líder supremo do irã", "khamenei",
+  "colonos israelenses", "cisjordânia",
+  "bombardeios", "beirute",
+  "guerra no oriente médio",
 ];
 
 // Relevance: articles must match at least one of these terms to be kept
