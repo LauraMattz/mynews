@@ -118,19 +118,23 @@ ACEITE artigos que tenham conexão clara com pelo menos um dos 4 pilares, mesmo 
 
 ${feedbackContext ? `\n## CONTEXTO DE FEEDBACK DO USUÁRIO (use para calibrar sua classificação):\n${feedbackContext}` : ""}`;
 
-1. **Tecnologia** - IA, software, hardware, inovação digital, cibersegurança, transformação digital, startups tech
-2. **Educação** - Ensino, pesquisa, universidades, ciência, formação, letramento, ENEM, bolsas
-3. **Liderança** - Governança, políticas públicas, governo, legislação, democracia, gestão pública
-4. **Equidade Racial** - Racismo, diversidade, inclusão, gênero, direitos humanos, desigualdade, feminismo, violência contra mulher, periferia, favela, trabalho, saúde pública
-
-REJEITE artigos sobre: entretenimento (BBB, celebridades, fofocas), esportes (futebol, F1), astrologia/horóscopo, ofertas comerciais, fait divers (acidentes, crimes comuns sem conexão social), lifestyle genérico (receitas, dicas domésticas), cultura pop.
-
-ACEITE artigos que tenham conexão clara com pelo menos um dos 4 pilares, mesmo que tangencial (ex: violência doméstica = equidade, ciência = educação).`
+          const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash-lite",
+              messages: [
+                {
+                  role: "system",
+                  content: systemPrompt,
                 },
                 {
                   role: "user",
-                  content: text
-                }
+                  content: text,
+                },
               ],
               tools: [
                 {
