@@ -342,7 +342,7 @@ const Index = () => {
               </p>
             </div>
             {triageArticles.length === 0 && (
-              <Button onClick={fetchNews} disabled={isFetching} className="gap-1.5">
+              <Button onClick={() => fetchNews()} disabled={isFetching} className="gap-1.5">
                 <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
                 Buscar Notícias
               </Button>
