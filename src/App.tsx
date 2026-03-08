@@ -9,6 +9,7 @@ import { DesktopNav } from "@/components/DesktopNav";
 import Index from "./pages/Index";
 import Summaries from "./pages/Summaries";
 import Insights from "./pages/Insights";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
