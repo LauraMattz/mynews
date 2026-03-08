@@ -92,7 +92,7 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <ThemeToggle />
               <Button
                 variant="outline"
                 size="sm"
