@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ThumbsUp, ThumbsDown, ExternalLink, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 const PILLAR_COLORS: Record<string, string> = {
   tecnologia: "bg-blue-500/10 text-blue-700 border-blue-200",
@@ -52,9 +52,33 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
   const cleanDescription = useMemo(() => article.description ? stripHtml(article.description) : null, [article.description]);
   const tags = article.ai_relevance_tags || [];
   const topicName = article.feeds?.topics?.name;
+  const [exiting, setExiting] = useState<"approve" | "reject" | null>(null);
+
+  const handleApprove = () => {
+    setExiting("approve");
+    setTimeout(() => {
+      onApprove(article.id);
+      onGenerateSummary(article.id);
+    }, 300);
+  };
+
+  const handleReject = () => {
+    setExiting("reject");
+    setTimeout(() => {
+      onReject(article.id);
+    }, 300);
+  };
 
   return (
-    <Card className={`transition-all hover:shadow-sm ${selected ? "ring-2 ring-primary/50 bg-primary/5" : ""}`}>
+    <Card
+      className={`transition-all duration-300 hover:shadow-sm animate-fade-in ${
+        selected ? "ring-2 ring-primary/50 bg-primary/5" : ""
+      } ${
+        exiting === "approve" ? "opacity-0 translate-x-12 scale-95" : ""
+      } ${
+        exiting === "reject" ? "opacity-0 -translate-x-12 scale-95" : ""
+      }`}
+    >
       <CardContent className="p-3 sm:p-4 space-y-2">
         {/* Header */}
         <div className="flex items-start gap-2 sm:gap-3">
@@ -99,17 +123,14 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
           )}
         </div>
 
-        {/* Actions - stack on mobile */}
+        {/* Actions */}
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1 pl-6 sm:pl-7">
           <Button
             variant="outline"
             size="sm"
             className="gap-1 text-[11px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
-            onClick={() => {
-              onApprove(article.id);
-              onGenerateSummary(article.id);
-            }}
-            disabled={isSummarizing}
+            onClick={handleApprove}
+            disabled={isSummarizing || exiting !== null}
           >
             <ThumbsUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             Aprovar
@@ -118,7 +139,8 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
             variant="outline"
             size="sm"
             className="gap-1 text-[11px] sm:text-xs h-7 sm:h-8 px-2 sm:px-3 text-destructive hover:bg-destructive/5 border-destructive/30"
-            onClick={() => onReject(article.id)}
+            onClick={handleReject}
+            disabled={exiting !== null}
           >
             <ThumbsDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             Descartar

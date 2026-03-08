@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TriageSkeletons } from "@/components/SkeletonCards";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -313,10 +314,7 @@ const Index = () => {
         )}
 
         {triageQuery.isLoading && (
-          <div className="text-center py-16 sm:py-20">
-            <RefreshCw className="h-8 w-8 text-muted-foreground/40 animate-spin mx-auto" />
-            <p className="text-sm text-muted-foreground mt-3">Carregando artigos...</p>
-          </div>
+          <TriageSkeletons count={5} />
         )}
       </main>
     </div>
