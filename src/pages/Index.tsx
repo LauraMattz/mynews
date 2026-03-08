@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RefreshCw, Sparkles, Search, Newspaper, Settings2, GitBranch, LayoutDashboard, FileText } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
   const {
     articlesQuery, statsQuery, fetchNews, isFetching, fetchProgress,
     summarizeArticles, isSummarizing, summarizeProgress, vote, softDelete,
