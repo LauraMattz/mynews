@@ -139,13 +139,20 @@ export function useArticles() {
           };
         });
 
-      // Filter out articles that already exist in DB
+      // Filter out articles that already exist in DB (batch to avoid URL too long)
       const links = articlesToInsert.map(a => a.link);
-      const { data: existingLinks } = await supabase
-        .from("articles")
-        .select("link")
-        .in("link", links);
-      const existingSet = new Set((existingLinks || []).map(e => e.link));
+      const existingSet = new Set<string>();
+      const linkBatchSize = 50;
+      for (let i = 0; i < links.length; i += linkBatchSize) {
+        const batch = links.slice(i, i + linkBatchSize);
+        const { data: existingLinks } = await supabase
+          .from("articles")
+          .select("link")
+          .in("link", batch);
+        if (existingLinks) {
+          existingLinks.forEach(e => existingSet.add(e.link));
+        }
+      }
       const newArticles = articlesToInsert.filter(a => !existingSet.has(a.link));
 
       const finalArticles = limit && limit > 0 ? newArticles.slice(0, limit) : newArticles;
