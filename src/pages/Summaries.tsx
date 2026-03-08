@@ -319,20 +319,22 @@ export default function Summaries() {
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <Checkbox
-                              checked={article.sent_to_newsletter}
-                              onCheckedChange={(checked) =>
-                                toggleNewsletter.mutate({ id: article.id, value: !!checked })
-                              }
-                            />
-                            <Send className={`h-2.5 w-2.5 ${article.sent_to_newsletter ? "text-primary" : "text-muted-foreground/30"}`} />
-                          </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button
+                            variant={article.sent_to_newsletter ? "default" : "outline"}
+                            size="sm"
+                            className="h-7 gap-1 text-[10px] sm:text-xs px-2"
+                            onClick={() =>
+                              toggleNewsletter.mutate({ id: article.id, value: !article.sent_to_newsletter })
+                            }
+                          >
+                            <Send className="h-3 w-3" />
+                            {article.sent_to_newsletter ? "Enviado" : "Newsletter"}
+                          </Button>
                           <Button
                             variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            size="sm"
+                            className="h-7 px-1.5 text-muted-foreground hover:text-destructive"
                             onClick={() => softDeleteArticle.mutate(article.id)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
