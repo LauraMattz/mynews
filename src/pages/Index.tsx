@@ -69,6 +69,15 @@ const Index = () => {
 
             <div className="flex items-center gap-2">
               <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => navigate("/resumos")}
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Resumos</span>
+              </Button>
+              <Button
                 onClick={fetchNews}
                 disabled={isFetching}
                 size="sm"
