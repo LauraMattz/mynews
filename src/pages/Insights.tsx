@@ -251,43 +251,6 @@ export default function Insights() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Pillar distribution */}
-          <Card>
-            <CardHeader className="p-3 sm:p-4 pb-0">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Tag className="h-4 w-4 text-accent" />
-                Distribuição por pilar
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              {stats.pillarData.length > 0 ? (
-                <div className="h-48 sm:h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={stats.pillarData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
-                        paddingAngle={4}
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      >
-                        {stats.pillarData.map((_, i) => (
-                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-10">Sem dados de pilares</p>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Sources chart */}
