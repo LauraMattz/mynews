@@ -165,6 +165,7 @@ export default function Insights() {
 
   const statCards = [
     { label: "Resumos", value: stats.total, icon: FileText, color: "text-primary" },
+    { label: "Declinados", value: stats.declined, icon: XCircle, color: "text-destructive" },
     { label: "Curtidos", value: stats.liked, icon: ThumbsUp, color: "text-accent" },
     { label: "Newsletter", value: stats.sentNewsletter, icon: Send, color: "text-primary" },
     { label: "Palavras/resumo", value: stats.avgWords, icon: Clock, color: "text-accent" },
