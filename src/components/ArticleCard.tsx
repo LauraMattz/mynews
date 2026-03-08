@@ -107,7 +107,7 @@ export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummariz
                 <p className="text-foreground/90 leading-relaxed">{article.summary}</p>
               </div>
             ) : article.description ? (
-              <p className="text-sm text-muted-foreground line-clamp-2">{article.description}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2">{cleanDescription}</p>
             ) : null}
 
             <div className="flex items-center gap-2 pt-1">
