@@ -119,7 +119,7 @@ export default function Insights() {
 
     // Volume over last 14 days
     const now = new Date();
-    const volumeData = [];
+    const rawVolumeData = [];
     for (let i = 13; i >= 0; i--) {
       const day = startOfDay(subDays(now, i));
       const dayStr = format(day, "yyyy-MM-dd");
@@ -128,8 +128,10 @@ export default function Insights() {
         if (!a.published_at) return false;
         return format(startOfDay(parseISO(a.published_at)), "yyyy-MM-dd") === dayStr;
       }).length;
-      volumeData.push({ label, count });
+      rawVolumeData.push({ label, count });
     }
+    const firstNonZero = rawVolumeData.findIndex(d => d.count > 0);
+    const volumeData = firstNonZero >= 0 ? rawVolumeData.slice(firstNonZero) : rawVolumeData;
 
     // Top liked articles
     const topLiked = articles
