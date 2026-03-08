@@ -498,22 +498,36 @@ export default function Summaries() {
                           </div>
                         )}
 
-                        {/* Summary */}
-                        {article.summary && (
-                          <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
-                            {article.summary.split(/\*\*(.*?)\*\*/).map((part, i) =>
-                              i % 2 === 1 ? (
-                                <strong key={i} className="block text-foreground font-semibold mt-2 first:mt-0">
-                                  {part}
-                                </strong>
-                              ) : (
-                                <span key={i}>{part}</span>
-                              )
-                            )}
-                          </div>
-                        )}
+                        {/* Summary block with copy */}
+                        {article.summary && (() => {
+                          const copyText = `${cleanTitle}\n(Português, ${readTime} min, texto)\n${article.link}\n\n${article.summary.replace(/\*\*/g, '')}`;
+                          return (
+                            <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 text-sm text-foreground/90 leading-relaxed relative group">
+                              {/* Header inside summary */}
+                              <div className="mb-3 pb-2 border-b border-primary/10">
+                                <p className="font-bold text-foreground">{cleanTitle}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  (Português, {readTime} min, texto)
+                                </p>
+                              </div>
+                              {/* Summary content */}
+                              <div className="whitespace-pre-line">
+                                {article.summary.split(/\*\*(.*?)\*\*/).map((part, i) =>
+                                  i % 2 === 1 ? (
+                                    <strong key={i} className="block text-foreground font-semibold mt-2 first:mt-0">
+                                      {part}
+                                    </strong>
+                                  ) : (
+                                    <span key={i}>{part}</span>
+                                  )
+                                )}
+                              </div>
+                              {/* Copy button */}
+                              <CopyButton text={copyText} />
+                            </div>
+                          );
+                        })()}
 
-                        {/* No summary yet */}
                         {!article.summary && (
                           <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground italic">
                             Sem resumo gerado ainda.
