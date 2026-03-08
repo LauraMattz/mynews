@@ -238,21 +238,21 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
             </div>
 
             {/* Actions — desktop only */}
-            <div className="hidden sm:flex flex-col items-end gap-1.5 shrink-0">
+            <div className="hidden sm:flex flex-row items-center gap-2 shrink-0">
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1 text-xs h-8 px-3 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 w-full justify-center"
+                className="gap-1 text-xs h-8 px-3 border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
                 onClick={handleApprove}
                 disabled={isSummarizing || exiting !== null}
               >
                 <ThumbsUp className="h-3.5 w-3.5" />
-                Aprovar + Resumir
+                Aprovar
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1 text-xs h-8 px-3 text-destructive hover:bg-destructive/5 border-destructive/30 w-full justify-center"
+                className="gap-1 text-xs h-8 px-3 text-destructive hover:bg-destructive/5 border-destructive/30"
                 onClick={handleReject}
                 disabled={exiting !== null}
               >
