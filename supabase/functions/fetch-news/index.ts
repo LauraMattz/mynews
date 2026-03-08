@@ -93,7 +93,15 @@ serve(async (req) => {
           if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
           }
-          const xml = await response.text();
+          // Handle encoding: try to detect charset from content-type header
+          const contentType = response.headers.get("content-type") || "";
+          let xml: string;
+          if (contentType.includes("iso-8859-1") || contentType.includes("latin1") || contentType.includes("windows-1252")) {
+            const buffer = await response.arrayBuffer();
+            xml = new TextDecoder("iso-8859-1").decode(buffer);
+          } else {
+            xml = await response.text();
+          }
           return parseRSS(xml, feed.name);
         } catch (e) {
           errors.push(`${feed.name}: ${e instanceof Error ? e.message : 'Unknown error'}`);
