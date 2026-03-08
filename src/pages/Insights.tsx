@@ -1,12 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   BarChart3, TrendingUp, Sparkles,
-  FileText, ThumbsUp, Send, Loader2, XCircle, Newspaper, Award, ExternalLink,
+  FileText, ThumbsUp, Send, XCircle, Newspaper, ExternalLink,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -14,6 +15,7 @@ import {
 } from "recharts";
 import { format, subDays, startOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { InsightSkeletons } from "@/components/SkeletonCards";
 
 const COLORS = [
   "hsl(250, 65%, 55%)", "hsl(170, 60%, 45%)", "hsl(45, 80%, 50%)",
@@ -27,11 +29,17 @@ const PILLAR_LABELS: Record<string, string> = {
   equidade_racial: "Equidade Racial",
 };
 
+const PERIOD_OPTIONS = [
+  { label: "7d", days: 7 },
+  { label: "14d", days: 14 },
+  { label: "30d", days: 30 },
+];
+
 function StatCard({ label, value, icon: Icon, accent, subtitle }: {
   label: string; value: number | string; icon: any; accent: string; subtitle?: string;
 }) {
   return (
-    <Card className="border-0 shadow-sm overflow-hidden relative group hover:shadow-md transition-shadow">
+    <Card className="border-0 shadow-sm overflow-hidden relative group hover:shadow-md transition-all duration-200">
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start justify-between">
           <div>
@@ -48,9 +56,9 @@ function StatCard({ label, value, icon: Icon, accent, subtitle }: {
   );
 }
 
-function RankingItem({ index, title, link, sourceName, badge, badgeVariant }: {
+function RankingItem({ index, title, link, sourceName, badge }: {
   index: number; title: string; link: string; sourceName?: string | null;
-  badge: string; badgeVariant?: string;
+  badge: string;
 }) {
   const medals = ["🥇", "🥈", "🥉"];
   return (
@@ -90,6 +98,8 @@ const tooltipStyle = {
 };
 
 export default function Insights() {
+  const [periodDays, setPeriodDays] = useState(14);
+
   const { data: articles, isLoading } = useQuery({
     queryKey: ["insights-articles"],
     queryFn: async () => {
@@ -138,7 +148,6 @@ export default function Insights() {
     const allItems = allArticlesForStatus || [];
     const totalAll = allItems.length;
     const declined = allItems.filter(a => a.is_deleted).length;
-    const aiRejected = allItems.filter(a => a.ai_review_status === "rejected").length;
     const approvalRate = totalAll > 0 ? Math.round(((totalAll - declined) / totalAll) * 100) : 0;
 
     // Pillar distribution
@@ -176,10 +185,10 @@ export default function Insights() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 8);
 
-    // Volume over last 14 days
+    // Volume over selected period
     const now = new Date();
     const rawVolumeData = [];
-    for (let i = 13; i >= 0; i--) {
+    for (let i = periodDays - 1; i >= 0; i--) {
       const day = startOfDay(subDays(now, i));
       const dayStr = format(day, "yyyy-MM-dd");
       const label = format(day, "dd MMM", { locale: ptBR });
@@ -205,11 +214,6 @@ export default function Insights() {
       .sort((a, b) => b.wordCount - a.wordCount)
       .slice(0, 5);
 
-    const totalWords = articles.reduce((sum, a) => {
-      return sum + (a.summary?.split(/\s+/).filter(w => w.length > 0).length || 0);
-    }, 0);
-    const avgWords = total > 0 ? Math.round(totalWords / total) : 0;
-
     // Source with most newsletter sends
     const sourceNewsletter: Record<string, number> = {};
     for (const a of articles.filter(x => x.sent_to_newsletter)) {
@@ -219,16 +223,27 @@ export default function Insights() {
     const topNewsletterSource = Object.entries(sourceNewsletter).sort((a, b) => b[1] - a[1])[0];
 
     return {
-      total, sentNewsletter, liked, declined, avgWords, approvalRate,
+      total, sentNewsletter, liked, declined, approvalRate,
       pillarData, topicData, sourceData, volumeData, topLiked, topLongest,
       totalAll, topNewsletterSource,
     };
-  }, [articles, votes, allArticlesForStatus]);
+  }, [articles, votes, allArticlesForStatus, periodDays]);
 
   if (isLoading || !stats) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background pb-16 sm:pb-0">
+        <div className="bg-gradient-to-br from-primary/8 via-background to-accent/5 border-b border-border">
+          <div className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+            <div className="flex items-center gap-2 mb-1">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              <h1 className="text-lg sm:text-2xl font-bold">Insights</h1>
+            </div>
+            <p className="text-xs sm:text-sm text-muted-foreground">Carregando dados...</p>
+          </div>
+        </div>
+        <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <InsightSkeletons />
+        </main>
       </div>
     );
   }
@@ -251,21 +266,46 @@ export default function Insights() {
       <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          <StatCard label="Processados" value={stats.totalAll} icon={Newspaper} accent="bg-muted text-muted-foreground" subtitle={`${stats.total} resumidos`} />
-          <StatCard label="Descartados" value={stats.declined} icon={XCircle} accent="bg-destructive/10 text-destructive" subtitle={`${stats.approvalRate}% aprovação`} />
-          <StatCard label="Curtidos" value={stats.liked} icon={ThumbsUp} accent="bg-accent/10 text-accent" />
-          <StatCard label="Newsletter" value={stats.sentNewsletter} icon={Send} accent="bg-primary/10 text-primary" subtitle={stats.topNewsletterSource ? `Top: ${stats.topNewsletterSource[0]}` : undefined} />
+          <div className="animate-fade-in" style={{ animationDelay: "0ms" }}>
+            <StatCard label="Processados" value={stats.totalAll} icon={Newspaper} accent="bg-muted text-muted-foreground" subtitle={`${stats.total} resumidos`} />
+          </div>
+          <div className="animate-fade-in" style={{ animationDelay: "50ms" }}>
+            <StatCard label="Descartados" value={stats.declined} icon={XCircle} accent="bg-destructive/10 text-destructive" subtitle={`${stats.approvalRate}% aprovação`} />
+          </div>
+          <div className="animate-fade-in" style={{ animationDelay: "100ms" }}>
+            <StatCard label="Curtidos" value={stats.liked} icon={ThumbsUp} accent="bg-accent/10 text-accent" />
+          </div>
+          <div className="animate-fade-in" style={{ animationDelay: "150ms" }}>
+            <StatCard label="Newsletter" value={stats.sentNewsletter} icon={Send} accent="bg-primary/10 text-primary" subtitle={stats.topNewsletterSource ? `Top: ${stats.topNewsletterSource[0]}` : undefined} />
+          </div>
         </div>
 
         {/* Volume + Pillar row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "200ms" }}>
           {/* Volume over time — takes 2 cols */}
           <Card className="lg:col-span-2 border-0 shadow-sm">
             <CardHeader className="p-3 sm:p-4 pb-0">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Volume de resumos
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  Volume de resumos
+                </CardTitle>
+                <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                  {PERIOD_OPTIONS.map(opt => (
+                    <Button
+                      key={opt.days}
+                      variant={periodDays === opt.days ? "default" : "ghost"}
+                      size="sm"
+                      className={`h-6 px-2.5 text-[10px] font-semibold rounded-md ${
+                        periodDays === opt.days ? "shadow-sm" : "hover:bg-transparent"
+                      }`}
+                      onClick={() => setPeriodDays(opt.days)}
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="p-3 sm:p-4">
               <div className="h-52 sm:h-60">
@@ -343,7 +383,7 @@ export default function Insights() {
         </div>
 
         {/* Sources + Topics row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "300ms" }}>
           <Card className="border-0 shadow-sm">
             <CardHeader className="p-3 sm:p-4 pb-0">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -399,7 +439,7 @@ export default function Insights() {
         </div>
 
         {/* Rankings */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
           <Card className="border-0 shadow-sm">
             <CardHeader className="p-3 sm:p-4 pb-1">
               <CardTitle className="text-sm flex items-center gap-2">

@@ -20,14 +20,20 @@ export function BottomNav() {
             <button
               key={path}
               onClick={() => navigate(path)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
+              className={`relative flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-lg transition-all duration-200 ${
                 active
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className={`h-5 w-5 ${active ? "stroke-[2.5]" : ""}`} />
-              <span className={`text-[10px] ${active ? "font-semibold" : "font-medium"}`}>
+              {/* Active pill indicator */}
+              {active && (
+                <span className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-primary animate-fade-in" />
+              )}
+              <div className={`p-1 rounded-lg transition-colors duration-200 ${active ? "bg-primary/10" : ""}`}>
+                <Icon className={`h-5 w-5 transition-all ${active ? "stroke-[2.5]" : ""}`} />
+              </div>
+              <span className={`text-[10px] ${active ? "font-bold" : "font-medium"}`}>
                 {label}
               </span>
             </button>
