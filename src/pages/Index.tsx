@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Sparkles, Search, Newspaper, Settings2, GitBranch, LayoutDashboard } from "lucide-react";
+import { RefreshCw, Sparkles, Search, Newspaper, Settings2, GitBranch, LayoutDashboard, FileText } from "lucide-react";
 
 const Index = () => {
   const {
