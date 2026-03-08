@@ -89,7 +89,11 @@ serve(async (req) => {
       body: JSON.stringify({}),
     });
     const classifyData = await classifyResp.json();
-    log.push(`Classified: ${classifyData.classified || 0} articles, ${classifyData.softDeleted || 0} auto-removed`);
+    log.push(`Classified: ${classifyData.classified || 0} articles, approved: ${classifyData.approved || 0}, rejected: ${classifyData.rejected || 0}`);
+
+    // Step 5b: Recalculate source reputation based on all feedback
+    await supabase.rpc("recalculate_source_reputation");
+    log.push("Source reputation recalculated");
 
     // Step 6: Generate summaries for approved articles without summary
     const { data: unsummarized } = await supabase
