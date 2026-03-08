@@ -104,12 +104,25 @@ export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummariz
             </div>
 
             {article.summary ? (
-              <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 text-sm space-y-2">
-                <div className="flex items-center gap-1.5 text-primary text-xs font-medium mb-2">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Resumo IA
+              <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 text-sm space-y-3">
+                {/* Header: title link + metadata */}
+                <div className="space-y-1">
+                  <a
+                    href={article.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    {cleanTitle}
+                    <ExternalLink className="inline-block ml-1 h-3 w-3" />
+                  </a>
+                  <p className="text-xs text-muted-foreground">
+                    (Português, {estimateReadingTime(article.summary + (article.description || ""))} min, texto)
+                  </p>
                 </div>
-                <div className="text-foreground/90 leading-relaxed whitespace-pre-line [&>p]:mb-2 [&>strong]:text-foreground [&>p>strong]:text-foreground">
+
+                {/* Summary content */}
+                <div className="text-foreground/90 leading-relaxed whitespace-pre-line">
                   {article.summary.split(/\*\*(.*?)\*\*/).map((part, i) =>
                     i % 2 === 1 ? <strong key={i} className="block text-foreground font-semibold mt-3 first:mt-0">{part}</strong> : <span key={i}>{part}</span>
                   )}
