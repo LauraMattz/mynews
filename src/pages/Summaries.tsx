@@ -61,7 +61,6 @@ const PILLAR_LABELS: Record<string, string> = {
 
 export default function Summaries() {
   const { toast } = useToast();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [linkInput, setLinkInput] = useState("");
