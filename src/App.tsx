@@ -21,7 +21,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <DesktopNav />
-          <div className="pb-14 sm:pb-0">
+          <div className="pb-14 sm:pb-0 sm:ml-48">
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/resumos" element={<Summaries />} />
