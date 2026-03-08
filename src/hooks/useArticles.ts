@@ -154,11 +154,14 @@ export function useArticles() {
       setFetchProgress({ stage: "saving", message: `Salvando ${data.items.length} artigos...`, percent: 70 });
 
       // Batch insert - much faster than individual inserts
-      // Filter out off-topic/commercial articles using blocklist
+      // Filter out off-topic/commercial articles using blocklist + relevance check
       const articlesToInsert = data.items
         .filter((item: any) => {
           const text = `${item.title} ${item.description || ""}`.toLowerCase();
-          return !BLOCKLIST_TERMS.some(term => text.includes(term));
+          // First: reject blocklisted terms
+          if (BLOCKLIST_TERMS.some(term => text.includes(term))) return false;
+          // Second: must match at least one relevance term
+          return RELEVANCE_TERMS.some(term => text.includes(term));
         })
         .map((item: any) => {
           const feed = feeds.find(f => f.name === item.sourceName);
