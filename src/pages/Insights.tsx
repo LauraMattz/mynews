@@ -30,7 +30,6 @@ const PILLAR_LABELS: Record<string, string> = {
 };
 
 export default function Insights() {
-  const navigate = useNavigate();
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["insights-articles"],
