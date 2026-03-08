@@ -9,6 +9,7 @@ import { DesktopNav } from "@/components/DesktopNav";
 import Index from "./pages/Index";
 import Summaries from "./pages/Summaries";
 import Insights from "./pages/Insights";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/resumos" element={<Summaries />} />
               <Route path="/insights" element={<Insights />} />
+              <Route path="/sobre" element={<About />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
