@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  ArrowLeft, Sparkles, ExternalLink, Link2, Loader2, Send,
+  Sparkles, ExternalLink, Link2, Loader2, Send,
   Calendar, Search, Copy, Check, Trash2,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
