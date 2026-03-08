@@ -48,7 +48,16 @@ serve(async (req) => {
               messages: [
                 {
                   role: "system",
-                  content: "Você é um assistente especializado em resumir notícias. Gere um resumo conciso em português (2-3 frases) do artigo fornecido. Seja direto e informativo."
+                  content: `Você é um assistente especializado em resumir notícias para um boletim informativo profissional. 
+Para cada artigo, gere um resumo estruturado no seguinte formato EXATO (use markdown):
+
+**Resumo**
+[Resumo do artigo em 3-4 frases. Seja direto, informativo e objetivo.]
+
+**Por que importa?**
+[Explique em 2-3 frases por que essa notícia é relevante, qual o impacto e as implicações mais amplas.]
+
+Não inclua título, link ou metadados. Apenas as seções "Resumo" e "Por que importa?".`
                 },
                 {
                   role: "user",

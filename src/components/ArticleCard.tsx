@@ -99,12 +99,16 @@ export function ArticleCard({ article, onVote, onDelete, onSummarize, isSummariz
             </div>
 
             {article.summary ? (
-              <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 text-sm">
-                <div className="flex items-center gap-1.5 text-primary text-xs font-medium mb-1">
+              <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 text-sm space-y-2">
+                <div className="flex items-center gap-1.5 text-primary text-xs font-medium mb-2">
                   <Sparkles className="h-3.5 w-3.5" />
                   Resumo IA
                 </div>
-                <p className="text-foreground/90 leading-relaxed">{article.summary}</p>
+                <div className="text-foreground/90 leading-relaxed whitespace-pre-line [&>p]:mb-2 [&>strong]:text-foreground [&>p>strong]:text-foreground">
+                  {article.summary.split(/\*\*(.*?)\*\*/).map((part, i) =>
+                    i % 2 === 1 ? <strong key={i} className="block text-foreground font-semibold mt-3 first:mt-0">{part}</strong> : <span key={i}>{part}</span>
+                  )}
+                </div>
               </div>
             ) : article.description ? (
               <p className="text-sm text-muted-foreground line-clamp-2">{cleanDescription}</p>
