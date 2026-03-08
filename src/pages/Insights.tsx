@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
-  ArrowLeft, BarChart3, TrendingUp, Sparkles, Clock,
+  BarChart3, TrendingUp, Sparkles, Clock,
   FileText, ThumbsUp, Send, Loader2, Tag, XCircle,
 } from "lucide-react";
 import {
@@ -30,7 +30,6 @@ const PILLAR_LABELS: Record<string, string> = {
 };
 
 export default function Insights() {
-  const navigate = useNavigate();
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["insights-articles"],
@@ -177,19 +176,14 @@ export default function Insights() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                Insights
-              </h1>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">
-                Análise dos {stats.total} resumos gerados
-              </p>
-            </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Insights
+            </h1>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Análise dos {stats.total} resumos gerados
+            </p>
           </div>
           <ThemeToggle />
         </div>
