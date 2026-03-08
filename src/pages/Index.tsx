@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   RefreshCw, Search, Newspaper, FileText, ThumbsDown,
-  Inbox, SlidersHorizontal, BarChart3,
+  Inbox, SlidersHorizontal, BarChart3, Sparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
