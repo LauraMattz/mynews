@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Sparkles, ExternalLink, Link2, Loader2, Send,
   Calendar, Filter, Bot, CheckCircle2, XCircle, Clock,
-  Trash2, Search, ShieldCheck, AlertTriangle,
+  Trash2, Search, ShieldCheck, AlertTriangle, Copy, Check,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
