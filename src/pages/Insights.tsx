@@ -8,11 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import {
   ArrowLeft, BarChart3, TrendingUp, Sparkles, Clock,
-  FileText, ThumbsUp, Send, Loader2, Tag,
+  FileText, ThumbsUp, Send, Loader2, Tag, XCircle,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, CartesianGrid,
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, LabelList,
 } from "recharts";
 import { format, subDays, startOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -55,6 +55,18 @@ export default function Insights() {
     },
   });
 
+  const { data: allArticlesForStatus } = useQuery({
+    queryKey: ["insights-all-status"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("articles")
+        .select("id, ai_review_status")
+        .eq("is_deleted", false);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
   const stats = useMemo(() => {
     if (!articles) return null;
 
@@ -66,9 +78,9 @@ export default function Insights() {
     const total = articles.length;
     const sentNewsletter = articles.filter(a => a.sent_to_newsletter).length;
     const liked = articles.filter(a => (voteMap.get(a.id) || 0) > 0).length;
-    const avgScore = total > 0
-      ? Math.round(articles.reduce((sum, a) => sum + (a.ai_relevance_score || 0), 0) / total * 10) / 10
-      : 0;
+
+    // Declined count from all articles
+    const declined = (allArticlesForStatus || []).filter(a => a.ai_review_status === "rejected").length;
 
     // Pillar distribution
     const pillarCounts: Record<string, number> = {};
@@ -80,6 +92,19 @@ export default function Insights() {
     const pillarData = Object.entries(pillarCounts)
       .map(([name, value]) => ({ name: PILLAR_LABELS[name] || name, value }))
       .sort((a, b) => b.value - a.value);
+
+    // Topic distribution (from feeds -> topics)
+    const topicCounts: Record<string, number> = {};
+    for (const a of articles) {
+      const feed = a.feeds as any;
+      const topicName = feed?.topics?.name;
+      if (topicName) {
+        topicCounts[topicName] = (topicCounts[topicName] || 0) + 1;
+      }
+    }
+    const topicData = Object.entries(topicCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
 
     // Source distribution (top 8)
     const sourceCounts: Record<string, number> = {};
@@ -113,23 +138,22 @@ export default function Insights() {
       .sort((a, b) => b.voteScore - a.voteScore)
       .slice(0, 5);
 
-    // Longest summaries (most complete)
+    // Longest summaries
     const topLongest = articles
       .map(a => ({ ...a, wordCount: a.summary?.split(/\s+/).filter(w => w.length > 0).length || 0 }))
       .sort((a, b) => b.wordCount - a.wordCount)
       .slice(0, 5);
 
-    // Average words per summary
     const totalWords = articles.reduce((sum, a) => {
       return sum + (a.summary?.split(/\s+/).filter(w => w.length > 0).length || 0);
     }, 0);
     const avgWords = total > 0 ? Math.round(totalWords / total) : 0;
 
     return {
-      total, sentNewsletter, liked, avgScore, avgWords,
-      pillarData, sourceData, volumeData, topLiked, topLongest,
+      total, sentNewsletter, liked, declined, avgWords,
+      pillarData, topicData, sourceData, volumeData, topLiked, topLongest,
     };
-  }, [articles, votes]);
+  }, [articles, votes, allArticlesForStatus]);
 
   if (isLoading || !stats) {
     return (
@@ -141,6 +165,7 @@ export default function Insights() {
 
   const statCards = [
     { label: "Resumos", value: stats.total, icon: FileText, color: "text-primary" },
+    { label: "Declinados", value: stats.declined, icon: XCircle, color: "text-destructive" },
     { label: "Curtidos", value: stats.liked, icon: ThumbsUp, color: "text-accent" },
     { label: "Newsletter", value: stats.sentNewsletter, icon: Send, color: "text-primary" },
     { label: "Palavras/resumo", value: stats.avgWords, icon: Clock, color: "text-accent" },
@@ -170,7 +195,7 @@ export default function Insights() {
 
       <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
           {statCards.map(({ label, value, icon: Icon, color }) => (
             <Card key={label} className="border-0 shadow-sm">
               <CardContent className="p-3 sm:p-4 flex flex-col items-center text-center gap-1">
@@ -216,7 +241,9 @@ export default function Insights() {
                       strokeWidth={2}
                       dot={{ r: 3, fill: "hsl(var(--primary))" }}
                       name="Resumos"
-                    />
+                    >
+                      <LabelList dataKey="count" position="top" style={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} formatter={(v: number) => v > 0 ? v : ""} />
+                    </Line>
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -284,14 +311,51 @@ export default function Insights() {
                       fontSize: "12px",
                     }}
                   />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Artigos" />
+                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Artigos">
+                    <LabelList dataKey="count" position="right" style={{ fontSize: 10, fill: "hsl(var(--foreground))" }} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
+        {/* Topics chart */}
+        {stats.topicData.length > 0 && (
+          <Card>
+            <CardHeader className="p-3 sm:p-4 pb-0">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-accent" />
+                Distribuição por temática
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4">
+              <div className="h-48 sm:h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.topicData}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                      }}
+                    />
+                    <Bar dataKey="count" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Artigos">
+                      <LabelList dataKey="count" position="top" style={{ fontSize: 10, fill: "hsl(var(--foreground))" }} />
+                      {stats.topicData.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Top lists */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {/* Top curtidos */}
           <Card>
