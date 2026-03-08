@@ -2,17 +2,15 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import {
-  BarChart3, TrendingUp, Sparkles, Clock,
-  FileText, ThumbsUp, Send, Loader2, Tag, XCircle,
+  BarChart3, TrendingUp, Sparkles,
+  FileText, ThumbsUp, Send, Loader2, XCircle, Newspaper, Award, ExternalLink,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, LabelList,
+  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid, LabelList,
 } from "recharts";
 import { format, subDays, startOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -29,8 +27,69 @@ const PILLAR_LABELS: Record<string, string> = {
   equidade_racial: "Equidade Racial",
 };
 
-export default function Insights() {
+function StatCard({ label, value, icon: Icon, accent, subtitle }: {
+  label: string; value: number | string; icon: any; accent: string; subtitle?: string;
+}) {
+  return (
+    <Card className="border-0 shadow-sm overflow-hidden relative group hover:shadow-md transition-shadow">
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-2xl sm:text-3xl font-bold tracking-tight">{value}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-0.5">{label}</p>
+            {subtitle && <p className="text-[10px] text-muted-foreground/70 mt-0.5">{subtitle}</p>}
+          </div>
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${accent} shrink-0`}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
+function RankingItem({ index, title, link, sourceName, badge, badgeVariant }: {
+  index: number; title: string; link: string; sourceName?: string | null;
+  badge: string; badgeVariant?: string;
+}) {
+  const medals = ["🥇", "🥈", "🥉"];
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-start gap-2.5 p-2 -mx-2 rounded-lg hover:bg-muted/50 transition-colors group"
+    >
+      <span className="text-sm w-6 shrink-0 text-center mt-0.5">
+        {index < 3 ? medals[index] : <span className="text-xs text-muted-foreground font-medium">{index + 1}.</span>}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs sm:text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+          {title}
+          <ExternalLink className="inline-block ml-1 h-2.5 w-2.5 opacity-0 group-hover:opacity-40 transition-opacity" />
+        </p>
+        <div className="flex items-center gap-1.5 mt-1">
+          <Badge variant="outline" className="text-[9px] sm:text-[10px] py-0 px-1.5 font-medium">
+            {badge}
+          </Badge>
+          {sourceName && (
+            <span className="text-[9px] sm:text-[10px] text-muted-foreground">{sourceName}</span>
+          )}
+        </div>
+      </div>
+    </a>
+  );
+}
+
+const tooltipStyle = {
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "8px",
+  fontSize: "12px",
+  boxShadow: "0 4px 12px -2px rgba(0,0,0,0.1)",
+};
+
+export default function Insights() {
   const { data: articles, isLoading } = useQuery({
     queryKey: ["insights-articles"],
     queryFn: async () => {
@@ -77,9 +136,9 @@ export default function Insights() {
     const total = articles.length;
     const sentNewsletter = articles.filter(a => a.sent_to_newsletter).length;
     const liked = articles.filter(a => (voteMap.get(a.id) || 0) > 0).length;
-
-    // Declined count from all articles
     const declined = (allArticlesForStatus || []).filter(a => a.ai_review_status === "rejected").length;
+    const totalAll = (allArticlesForStatus || []).length;
+    const approvalRate = totalAll > 0 ? Math.round(((totalAll - declined) / totalAll) * 100) : 0;
 
     // Pillar distribution
     const pillarCounts: Record<string, number> = {};
@@ -92,7 +151,7 @@ export default function Insights() {
       .map(([name, value]) => ({ name: PILLAR_LABELS[name] || name, value }))
       .sort((a, b) => b.value - a.value);
 
-    // Topic distribution (from feeds -> topics)
+    // Topic distribution
     const topicCounts: Record<string, number> = {};
     for (const a of articles) {
       const feed = a.feeds as any;
@@ -122,7 +181,7 @@ export default function Insights() {
     for (let i = 13; i >= 0; i--) {
       const day = startOfDay(subDays(now, i));
       const dayStr = format(day, "yyyy-MM-dd");
-      const label = format(day, "dd/MM");
+      const label = format(day, "dd MMM", { locale: ptBR });
       const count = articles.filter(a => {
         if (!a.published_at) return false;
         return format(startOfDay(parseISO(a.published_at)), "yyyy-MM-dd") === dayStr;
@@ -150,9 +209,18 @@ export default function Insights() {
     }, 0);
     const avgWords = total > 0 ? Math.round(totalWords / total) : 0;
 
+    // Source with most newsletter sends
+    const sourceNewsletter: Record<string, number> = {};
+    for (const a of articles.filter(x => x.sent_to_newsletter)) {
+      const src = a.source_name || "Desconhecido";
+      sourceNewsletter[src] = (sourceNewsletter[src] || 0) + 1;
+    }
+    const topNewsletterSource = Object.entries(sourceNewsletter).sort((a, b) => b[1] - a[1])[0];
+
     return {
-      total, sentNewsletter, liked, declined, avgWords,
+      total, sentNewsletter, liked, declined, avgWords, approvalRate,
       pillarData, topicData, sourceData, volumeData, topLiked, topLongest,
+      totalAll, topNewsletterSource,
     };
   }, [articles, votes, allArticlesForStatus]);
 
@@ -164,226 +232,224 @@ export default function Insights() {
     );
   }
 
-  const statCards = [
-    { label: "Resumos", value: stats.total, icon: FileText, color: "text-primary" },
-    { label: "Declinados", value: stats.declined, icon: XCircle, color: "text-destructive" },
-    { label: "Curtidos", value: stats.liked, icon: ThumbsUp, color: "text-accent" },
-    { label: "Newsletter", value: stats.sentNewsletter, icon: Send, color: "text-primary" },
-    { label: "Palavras/resumo", value: stats.avgWords, icon: Clock, color: "text-accent" },
-  ];
-
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Insights
-            </h1>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">
-              Análise dos {stats.total} resumos gerados
-            </p>
+    <div className="min-h-screen bg-background pb-16 sm:pb-0">
+      {/* Hero header */}
+      <div className="bg-gradient-to-br from-primary/8 via-background to-accent/5 border-b border-border">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 py-5 sm:py-8">
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            <h1 className="text-lg sm:text-2xl font-bold">Insights</h1>
           </div>
-          <ThemeToggle />
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Análise de {stats.total} resumos a partir de {stats.totalAll} artigos processados
+          </p>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
-          {statCards.map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} className="border-0 shadow-sm">
-              <CardContent className="p-3 sm:p-4 flex flex-col items-center text-center gap-1">
-                <div className={`h-8 w-8 rounded-lg bg-muted flex items-center justify-center ${color}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <p className="text-xl sm:text-2xl font-bold leading-none">{value}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground">{label}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+          <StatCard label="Resumos" value={stats.total} icon={FileText} accent="bg-primary/10 text-primary" />
+          <StatCard label="Newsletter" value={stats.sentNewsletter} icon={Send} accent="bg-primary/10 text-primary" subtitle={stats.topNewsletterSource ? `Top: ${stats.topNewsletterSource[0]}` : undefined} />
+          <StatCard label="Curtidos" value={stats.liked} icon={ThumbsUp} accent="bg-accent/10 text-accent" />
+          <StatCard label="Declinados" value={stats.declined} icon={XCircle} accent="bg-destructive/10 text-destructive" />
+          <StatCard label="Aprovação" value={`${stats.approvalRate}%`} icon={Award} accent="bg-accent/10 text-accent" />
+          <StatCard label="Média palavras" value={stats.avgWords} icon={Newspaper} accent="bg-muted text-muted-foreground" subtitle="por resumo" />
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          {/* Volume over time */}
-          <Card>
+        {/* Volume + Pillar row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+          {/* Volume over time — takes 2 cols */}
+          <Card className="lg:col-span-2 border-0 shadow-sm">
             <CardHeader className="p-3 sm:p-4 pb-0">
               <CardTitle className="text-sm flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-primary" />
-                Volume (últimos 14 dias)
+                Volume de resumos
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4">
-              <div className="h-48 sm:h-56">
+              <div className="h-52 sm:h-60">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={stats.volumeData}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Line
+                  <AreaChart data={stats.volumeData}>
+                    <defs>
+                      <linearGradient id="volumeGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-20" />
+                    <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Area
                       type="monotone"
                       dataKey="count"
                       stroke="hsl(var(--primary))"
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: "hsl(var(--primary))" }}
+                      strokeWidth={2.5}
+                      fill="url(#volumeGradient)"
+                      dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                      activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
                       name="Resumos"
-                    >
-                      <LabelList dataKey="count" position="top" style={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} formatter={(v: number) => v > 0 ? v : ""} />
-                    </Line>
-                  </LineChart>
+                    />
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
+
+          {/* Pillar Pie */}
+          {stats.pillarData.length > 0 ? (
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="p-3 sm:p-4 pb-0">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-accent" />
+                  Pilares
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-4">
+                <div className="h-40 sm:h-44">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={stats.pillarData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={35}
+                        outerRadius={60}
+                        paddingAngle={3}
+                        dataKey="value"
+                        nameKey="name"
+                        strokeWidth={0}
+                      >
+                        {stats.pillarData.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={tooltipStyle} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex flex-wrap gap-1.5 justify-center mt-1">
+                  {stats.pillarData.map((p, i) => (
+                    <Badge key={p.name} variant="outline" className="text-[10px] py-0 px-1.5 gap-1">
+                      <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                      {p.name} ({p.value})
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-0 shadow-sm flex items-center justify-center">
+              <CardContent className="p-4 text-center text-muted-foreground">
+                <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                <p className="text-xs">Nenhum pilar classificado ainda</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        {/* Sources chart */}
-        <Card>
-          <CardHeader className="p-3 sm:p-4 pb-0">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-primary" />
-              Top fontes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4">
-            <div className="h-48 sm:h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.sourceData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                  <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name="Artigos">
-                    <LabelList dataKey="count" position="right" style={{ fontSize: 10, fill: "hsl(var(--foreground))" }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Topics chart */}
-        {stats.topicData.length > 0 && (
-          <Card>
+        {/* Sources + Topics row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+          <Card className="border-0 shadow-sm">
             <CardHeader className="p-3 sm:p-4 pb-0">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-accent" />
-                Distribuição por temática
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Top fontes
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4">
-              <div className="h-48 sm:h-56">
+              <div className="h-52 sm:h-60">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats.topicData}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Bar dataKey="count" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Artigos">
-                      <LabelList dataKey="count" position="top" style={{ fontSize: 10, fill: "hsl(var(--foreground))" }} />
-                      {stats.topicData.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                      ))}
+                  <BarChart data={stats.sourceData} layout="vertical" barCategoryGap="20%">
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-20" horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} axisLine={false} tickLine={false} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={90} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} name="Artigos" maxBarSize={28}>
+                      <LabelList dataKey="count" position="right" style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }} />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
-        )}
 
+          {stats.topicData.length > 0 && (
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="p-3 sm:p-4 pb-0">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-accent" />
+                  Temáticas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-4">
+                <div className="h-52 sm:h-60">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats.topicData} barCategoryGap="25%">
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-20" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10 }} allowDecimals={false} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={tooltipStyle} />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]} name="Artigos" maxBarSize={40}>
+                        {stats.topicData.map((_, i) => (
+                          <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        ))}
+                        <LabelList dataKey="count" position="top" style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Rankings */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          {/* Top curtidos */}
-          <Card>
-            <CardHeader className="p-3 sm:p-4 pb-2">
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="p-3 sm:p-4 pb-1">
               <CardTitle className="text-sm flex items-center gap-2">
                 <ThumbsUp className="h-4 w-4 text-accent" />
                 Mais curtidos
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
+            <CardContent className="p-3 sm:p-4 pt-1 space-y-0.5">
               {stats.topLiked.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nenhum artigo curtido ainda.</p>
+                <p className="text-xs text-muted-foreground py-4 text-center">Nenhum artigo curtido ainda.</p>
               ) : (
                 stats.topLiked.map((a, i) => (
-                  <a
+                  <RankingItem
                     key={a.id}
-                    href={a.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-start gap-2 group"
-                  >
-                    <span className="text-xs font-bold text-muted-foreground w-4 shrink-0">{i + 1}.</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                        {a.title}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <Badge variant="outline" className="text-[9px] py-0 px-1">+{a.voteScore}</Badge>
-                        {a.source_name && (
-                          <span className="text-[9px] text-muted-foreground">{a.source_name}</span>
-                        )}
-                      </div>
-                    </div>
-                  </a>
+                    index={i}
+                    title={a.title}
+                    link={a.link}
+                    sourceName={a.source_name}
+                    badge={`+${a.voteScore}`}
+                  />
                 ))
               )}
             </CardContent>
           </Card>
 
-          {/* Longest summaries */}
-          <Card>
-            <CardHeader className="p-3 sm:p-4 pb-2">
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="p-3 sm:p-4 pb-1">
               <CardTitle className="text-sm flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
                 Resumos mais completos
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
+            <CardContent className="p-3 sm:p-4 pt-1 space-y-0.5">
               {stats.topLongest.map((a, i) => (
-                <a
+                <RankingItem
                   key={a.id}
-                  href={a.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-start gap-2 group"
-                >
-                  <span className="text-xs font-bold text-muted-foreground w-4 shrink-0">{i + 1}.</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                      {a.title}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <Badge variant="outline" className="text-[9px] py-0 px-1">{a.wordCount} palavras</Badge>
-                      {a.source_name && (
-                        <span className="text-[9px] text-muted-foreground">{a.source_name}</span>
-                      )}
-                    </div>
-                  </div>
-                </a>
+                  index={i}
+                  title={a.title}
+                  link={a.link}
+                  sourceName={a.source_name}
+                  badge={`${a.wordCount} palavras`}
+                />
               ))}
             </CardContent>
           </Card>
