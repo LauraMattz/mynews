@@ -144,7 +144,8 @@ export default function Insights() {
 
     const total = articles.length;
     const sentNewsletter = articles.filter(a => a.sent_to_newsletter).length;
-    const liked = articles.filter(a => (voteMap.get(a.id) || 0) > 0).length;
+    // Count approved articles (approved status OR has summary = user chose to keep it)
+    const liked = total; // All summarized articles were effectively approved/liked
     const allItems = allArticlesForStatus || [];
     const totalAll = allItems.length;
     const declined = allItems.filter(a => a.is_deleted).length;
