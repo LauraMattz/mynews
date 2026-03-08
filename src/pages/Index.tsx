@@ -12,16 +12,20 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   RefreshCw, Search, Newspaper, ThumbsDown,
-  Inbox, SlidersHorizontal, Sparkles,
+  Inbox, SlidersHorizontal, Sparkles, Link2, Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const {
     triageQuery, statsQuery, fetchNews, isFetching, fetchProgress,
     summarizeArticles, isSummarizing, summarizeProgress,
@@ -30,6 +34,51 @@ const Index = () => {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("triagem");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [linkInput, setLinkInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+
+  const handlePasteLink = async () => {
+    if (!linkInput.trim()) return;
+    setIsGenerating(true);
+    try {
+      const { data: inserted, error: insertErr } = await supabase
+        .from("articles")
+        .upsert(
+          { link: linkInput.trim(), title: "Carregando...", source_name: "Link manual" },
+          { onConflict: "link", ignoreDuplicates: false }
+        )
+        .select("id, title, description")
+        .single();
+      if (insertErr) throw insertErr;
+
+      const { data, error } = await supabase.functions.invoke("summarize-news", {
+        body: {
+          articles: [
+            { id: inserted.id, title: inserted.title, description: inserted.description || linkInput },
+          ],
+        },
+      });
+      if (error) throw error;
+      if (data.summaries?.length > 0) {
+        await supabase.from("articles").update({ summary: data.summaries[0].summary }).eq("id", inserted.id);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["summarized-articles"] });
+      queryClient.invalidateQueries({ queryKey: ["article-stats"] });
+      setLinkInput("");
+      setLinkDialogOpen(false);
+      toast({ title: "Resumo gerado com sucesso!" });
+    } catch (e) {
+      toast({
+        title: "Erro ao gerar resumo",
+        description: e instanceof Error ? e.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const stats = statsQuery.data;
   const triageArticles = triageQuery.data || [];
@@ -94,6 +143,36 @@ const Index = () => {
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <ThemeToggle />
+              <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1 h-8 px-2 sm:px-3">
+                    <Link2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Link</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Link2 className="h-4 w-4 text-primary" />
+                      Colar link e gerar resumo
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      placeholder="Cole o link aqui..."
+                      value={linkInput}
+                      onChange={(e) => setLinkInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handlePasteLink()}
+                      disabled={isGenerating}
+                      className="h-9 text-sm"
+                    />
+                    <Button onClick={handlePasteLink} disabled={isGenerating || !linkInput.trim()} className="h-9 px-3 shrink-0">
+                      {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      <span className="ml-1">Gerar</span>
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button
                 onClick={fetchNews}
                 disabled={isFetching}
