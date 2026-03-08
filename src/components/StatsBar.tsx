@@ -1,22 +1,22 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Rss, FileText, Sparkles, TrendingUp } from "lucide-react";
+import { Rss, FileText, Sparkles, Inbox } from "lucide-react";
 
 interface StatsProps {
   activeFeeds: number;
   totalArticles: number;
   summarizedArticles: number;
-  avgRelevanceScore: number;
+  pendingTriage: number;
 }
 
 const statItems = [
   { key: "activeFeeds", label: "Feeds Ativos", icon: Rss, color: "text-primary" },
   { key: "totalArticles", label: "Artigos", icon: FileText, color: "text-accent" },
   { key: "summarizedArticles", label: "Resumidos", icon: Sparkles, color: "text-primary" },
-  { key: "avgRelevanceScore", label: "Score Médio", icon: TrendingUp, color: "text-accent" },
+  { key: "pendingTriage", label: "Para Triar", icon: Inbox, color: "text-accent" },
 ] as const;
 
-export function StatsBar({ activeFeeds, totalArticles, summarizedArticles, avgRelevanceScore }: StatsProps) {
-  const values = { activeFeeds, totalArticles, summarizedArticles, avgRelevanceScore };
+export function StatsBar({ activeFeeds, totalArticles, summarizedArticles, pendingTriage }: StatsProps) {
+  const values = { activeFeeds, totalArticles, summarizedArticles, pendingTriage };
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
