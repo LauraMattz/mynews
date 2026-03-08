@@ -81,7 +81,7 @@ export function PipelinePage() {
     <div className="space-y-8">
       {/* Hero */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold tracking-tight">Como funciona o NewsFlow</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Como funciona o MyNews</h2>
         <p className="text-muted-foreground max-w-lg mx-auto">
           Pipeline completo de curadoria de notícias: da coleta à recomendação inteligente.
         </p>
