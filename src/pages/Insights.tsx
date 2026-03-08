@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, CartesianGrid,
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, LabelList,
 } from "recharts";
 import { format, subDays, startOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
