@@ -6,68 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Same blocklist/relevance as frontend
-const BLOCKLIST_TERMS = [
-  "horóscopo", "horoscopo", "tarot", "signo", "signos", "astrologia",
-  "previsão para os signos", "previsão para os 12 signos", "fase da lua",
-  "lua hoje", "mapa astral",
-  "patrocinado", "publipost", "publieditorial", "branded content",
-  "oferta", "cupom", "desconto exclusivo", "black friday",
-  "compre agora", "link de afiliado", "sorteio", "em oferta",
-  "bbb 26", "bbb 25", "big brother", "reality show",
-  "fofoca", "celebridade", "ex-namorada de", "ex-namorado de",
-  "ivete sangalo", "larissa manoela", "ticiane pinheiro",
-  "solange couto", "leo lins", "andré frambach",
-  "fórmula 1", "formula 1", "gp da austr", "arnold classic",
-  "fisiculturismo", "campeonato paulista", "palmeiras",
-  "futebol ao vivo", "jogos de hoje", "onde assistir",
-  "men's physique", "bikini", "bodybuilding",
-  "receita de", "dieta de", "emagreça",
-  "ar-condicionado", "leite de vaca para gato",
-  "água quente pode congelar", "motor turbo",
-  "mouse attack shark",
-  "arrastado por enxurrada", "enxurrada em",
-  "temporal em", "temporais devem",
-  "morte de apresentador", "anuncia morte",
-  "iate de luxo", "vorcaro gastou",
-  "academia pioneira", "gaviões 24h",
-  "grande sertão, 70", "guimarães rosa",
-  "assembleia de especialistas do irã",
-  "líder supremo do irã", "khamenei",
-  "colonos israelenses", "cisjordânia",
-  "bombardeios", "beirute",
-  "guerra no oriente médio",
-];
-
-const RELEVANCE_TERMS = [
-  "tecnologia", "tech", "digital", "inteligência artificial", "ia ", " ia,", " ia.",
-  "software", "hardware", "dados", "algoritmo", "startup", "inovação",
-  "cibersegurança", "internet", "plataforma", "automação", "robô",
-  "machine learning", "deep learning", "computação", "nuvem", "cloud",
-  "5g", "semicondutor", "chip", "blockchain", "metaverso",
-  "acessibilidade digital", "inclusão digital", "transformação digital",
-  "apagão de internet", "tecnoabsolutismo",
-  "educação", "ensino", "escola", "universidade", "professor", "aluno",
-  "aprendizagem", "pedagog", "currículo", "enem", "vestibular",
-  "pesquisa", "pesquisador", "ciência", "científic", "acadêmic",
-  "doutorado", "mestrado", "bolsa de estudo", "capes", "cnpq",
-  "analfabet", "letramento", "formação", "capacitação",
-  "liderança", "líder", "gestão", "governança", "política pública",
-  "governo", "congresso", "senado", "câmara", "ministro", "presidente",
-  "reforma", "regulação", "legislação", "lei ", "projeto de lei",
-  "democracia", "direitos", "constituição", "supremo", "stf",
-  "eleição", "eleições", "voto", "mandate",
-  "equidade racial", "racismo", "racial", "negro", "negra", "preto", "preta",
-  "quilombo", "afro", "antirracis", "discriminação",
-  "diversidade", "inclusão", "igualdade", "gênero",
-  "feminismo", "feminicídio", "violência contra a mulher", "violência doméstica",
-  "mulher", "mulheres", "desigualdade", "vulnerável", "vulnerabilidade",
-  "favela", "periferia", "comunidade", "direitos humanos",
-  "trabalho", "emprego", "salário", "renda", "pobreza",
-  "saúde pública", "sus", "acesso", "política social",
-  "bpc", "deficiência",
-];
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
