@@ -16,6 +16,9 @@ export type Database = {
     Tables: {
       articles: {
         Row: {
+          ai_relevance_score: number | null
+          ai_relevance_tags: string[] | null
+          ai_review_status: string | null
           created_at: string
           description: string | null
           feed_id: string | null
@@ -31,6 +34,9 @@ export type Database = {
           title: string
         }
         Insert: {
+          ai_relevance_score?: number | null
+          ai_relevance_tags?: string[] | null
+          ai_review_status?: string | null
           created_at?: string
           description?: string | null
           feed_id?: string | null
@@ -46,6 +52,9 @@ export type Database = {
           title: string
         }
         Update: {
+          ai_relevance_score?: number | null
+          ai_relevance_tags?: string[] | null
+          ai_review_status?: string | null
           created_at?: string
           description?: string | null
           feed_id?: string | null
