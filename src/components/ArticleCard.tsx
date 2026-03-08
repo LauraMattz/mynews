@@ -11,6 +11,11 @@ function stripHtml(html: string): string {
   return doc.body.textContent || "";
 }
 
+function estimateReadingTime(text: string): number {
+  const words = text.split(/\s+/).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
 interface ArticleCardProps {
   article: {
     id: string;
