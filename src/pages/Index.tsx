@@ -84,6 +84,7 @@ const Index = () => {
                 <Trash2 className={`h-4 w-4 ${isCleaningUp ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline">Limpar Irrelevantes</span>
               </Button>
+              <Button
                 variant="outline"
                 size="sm"
                 className="gap-1.5"
