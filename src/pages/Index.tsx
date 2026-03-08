@@ -10,12 +10,12 @@ import { PipelineProgress } from "@/components/PipelineProgress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  RefreshCw, Search, Newspaper, Settings2, FileText, Bot, Loader2,
+  RefreshCw, Search, Newspaper, FileText, ThumbsDown,
   Inbox, SlidersHorizontal,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -28,8 +28,7 @@ const Index = () => {
   } = useArticles();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("triagem");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
-  const [isClassifying, setIsClassifying] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const stats = statsQuery.data;
   const triageArticles = triageQuery.data || [];
@@ -37,38 +36,41 @@ const Index = () => {
   const filtered = useMemo(() => {
     const s = search.toLowerCase();
     return triageArticles.filter(a => {
-      const matchesSearch = !s ||
+      return !s ||
         a.title.toLowerCase().includes(s) ||
         a.description?.toLowerCase().includes(s) ||
         a.source_name?.toLowerCase().includes(s);
-      const matchesStatus = statusFilter === "all" || a.ai_review_status === statusFilter;
-      return matchesSearch && matchesStatus;
     });
-  }, [triageArticles, search, statusFilter]);
+  }, [triageArticles, search]);
 
-  const pendingCount = triageArticles.filter(a => a.ai_review_status === "pending").length;
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
-  const handleClassifyAll = async () => {
-    setIsClassifying(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("classify-articles");
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error);
-      triageQuery.refetch();
-      statsQuery.refetch();
-      toast({
-        title: "Classificação concluída!",
-        description: `${data.approved} relevantes, ${data.rejected} irrelevantes.`,
-      });
-    } catch (e) {
-      toast({
-        title: "Erro na classificação",
-        description: e instanceof Error ? e.message : "Erro desconhecido",
-        variant: "destructive",
-      });
-    } finally {
-      setIsClassifying(false);
+  const toggleSelectAll = () => {
+    if (selected.size === filtered.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(filtered.map(a => a.id)));
     }
+  };
+
+  const handleBulkDiscard = async () => {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    for (const id of ids) {
+      rejectArticle.mutate(id);
+    }
+    setSelected(new Set());
+    toast({
+      title: `${ids.length} artigos descartados`,
+      description: "Feedback registrado para melhorar recomendações.",
+    });
   };
 
   return (
@@ -136,9 +138,9 @@ const Index = () => {
             <TabsTrigger value="triagem" className="gap-1.5">
               <Inbox className="h-4 w-4" />
               Triagem
-              {pendingCount > 0 && (
+              {triageArticles.length > 0 && (
                 <Badge variant="destructive" className="h-5 min-w-5 text-[10px] px-1.5 ml-1">
-                  {pendingCount}
+                  {triageArticles.length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -150,51 +152,41 @@ const Index = () => {
 
           {/* Triagem tab */}
           <TabsContent value="triagem" className="space-y-4 mt-4">
-            {/* Search, filter & classify */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar artigos..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <div className="flex items-center gap-1.5">
-                {(["all", "pending", "approved", "rejected"] as const).map(s => (
-                  <Button
-                    key={s}
-                    variant={statusFilter === s ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setStatusFilter(s)}
-                    className="text-xs"
-                  >
-                    {s === "all" ? "Todos" : s === "pending" ? "⏳ Pendentes" : s === "approved" ? "✓ Aprovados" : "✗ Rejeitados"}
-                  </Button>
-                ))}
-              </div>
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar artigos..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9"
+              />
             </div>
 
             {/* Action bar */}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {filtered.length} artigos para triagem
-              </p>
-              <Button
-                onClick={handleClassifyAll}
-                disabled={isClassifying || pendingCount === 0}
-                size="sm"
-                variant="outline"
-                className="gap-1.5"
-              >
-                {isClassifying ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Bot className="h-4 w-4" />
-                )}
-                {isClassifying ? "Classificando..." : `Classificar IA (${pendingCount})`}
-              </Button>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={filtered.length > 0 && selected.size === filtered.length}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {selected.size > 0 ? `${selected.size} selecionados` : `${filtered.length} artigos`}
+                  </span>
+                </div>
+              </div>
+              {selected.size > 0 && (
+                <Button
+                  onClick={handleBulkDiscard}
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 text-destructive hover:text-destructive border-destructive/30"
+                >
+                  <ThumbsDown className="h-4 w-4" />
+                  Descartar {selected.size} selecionados
+                </Button>
+              )}
             </div>
 
             {/* Articles */}
@@ -203,6 +195,8 @@ const Index = () => {
                 <TriageCard
                   key={article.id}
                   article={article}
+                  selected={selected.has(article.id)}
+                  onToggleSelect={toggleSelect}
                   onApprove={id => approveArticle.mutate(id)}
                   onReject={id => rejectArticle.mutate(id)}
                   onGenerateSummary={id => summarizeArticles([id])}
