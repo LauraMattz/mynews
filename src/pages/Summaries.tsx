@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft, Sparkles, ExternalLink, Link2, Loader2, Send,
   Calendar, Filter, Bot, CheckCircle2, XCircle, Clock,
-  Trash2, Search, ShieldCheck, AlertTriangle,
+  Trash2, Search, ShieldCheck, AlertTriangle, Copy, Check,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -25,6 +25,26 @@ function stripHtml(html: string): string {
 function estimateReadingTime(text: string): number {
   const words = text.split(/\s+/).length;
   return Math.max(1, Math.ceil(words / 200));
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="absolute top-2 right-2 h-7 gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+      onClick={handleCopy}
+    >
+      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {copied ? "Copiado!" : "Copiar"}
+    </Button>
+  );
 }
 
 const PILLAR_COLORS: Record<string, string> = {
@@ -498,22 +518,36 @@ export default function Summaries() {
                           </div>
                         )}
 
-                        {/* Summary */}
-                        {article.summary && (
-                          <div className="bg-primary/5 border border-primary/10 rounded-lg p-3 text-sm text-foreground/90 leading-relaxed whitespace-pre-line">
-                            {article.summary.split(/\*\*(.*?)\*\*/).map((part, i) =>
-                              i % 2 === 1 ? (
-                                <strong key={i} className="block text-foreground font-semibold mt-2 first:mt-0">
-                                  {part}
-                                </strong>
-                              ) : (
-                                <span key={i}>{part}</span>
-                              )
-                            )}
-                          </div>
-                        )}
+                        {/* Summary block with copy */}
+                        {article.summary && (() => {
+                          const copyText = `${cleanTitle}\n(Português, ${readTime} min, texto)\n${article.link}\n\n${article.summary.replace(/\*\*/g, '')}`;
+                          return (
+                            <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 text-sm text-foreground/90 leading-relaxed relative group">
+                              {/* Header inside summary */}
+                              <div className="mb-3 pb-2 border-b border-primary/10">
+                                <p className="font-bold text-foreground">{cleanTitle}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  (Português, {readTime} min, texto)
+                                </p>
+                              </div>
+                              {/* Summary content */}
+                              <div className="whitespace-pre-line">
+                                {article.summary.split(/\*\*(.*?)\*\*/).map((part, i) =>
+                                  i % 2 === 1 ? (
+                                    <strong key={i} className="block text-foreground font-semibold mt-2 first:mt-0">
+                                      {part}
+                                    </strong>
+                                  ) : (
+                                    <span key={i}>{part}</span>
+                                  )
+                                )}
+                              </div>
+                              {/* Copy button */}
+                              <CopyButton text={copyText} />
+                            </div>
+                          );
+                        })()}
 
-                        {/* No summary yet */}
                         {!article.summary && (
                           <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground italic">
                             Sem resumo gerado ainda.
