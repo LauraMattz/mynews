@@ -298,7 +298,7 @@ export default function Insights() {
           </Card>
 
           {/* Pillar Pie */}
-          {stats.pillarData.length > 0 ? (
+          {stats.pillarData.length > 0 && (
             <Card className="border-0 shadow-sm">
               <CardHeader className="p-3 sm:p-4 pb-0">
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -337,13 +337,6 @@ export default function Insights() {
                     </Badge>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="border-0 shadow-sm flex items-center justify-center">
-              <CardContent className="p-4 text-center text-muted-foreground">
-                <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-20" />
-                <p className="text-xs">Nenhum pilar classificado ainda</p>
               </CardContent>
             </Card>
           )}
