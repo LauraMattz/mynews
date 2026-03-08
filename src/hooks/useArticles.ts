@@ -3,6 +3,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useCallback } from "react";
 
+// Blocklist: terms that indicate off-topic/commercial content
+const BLOCKLIST_TERMS = [
+  "horóscopo", "horoscopo", "tarot", "signo", "signos", "astrologia",
+  "previsão para os signos", "previsão para os 12 signos",
+  "patrocinado", "publipost", "publieditorial", "branded content",
+  "oferta", "cupom", "desconto exclusivo", "black friday",
+  "compre agora", "link de afiliado", "sorteio",
+  "receita de", "dieta de", "emagreça",
+];
+
 export interface FetchProgress {
   stage: "idle" | "fetching_feeds" | "parsing" | "saving" | "done";
   message: string;
