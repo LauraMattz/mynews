@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useArticles } from "@/hooks/useArticles";
 import { TopicManager } from "@/components/TopicManager";
 import { FeedManager } from "@/components/FeedManager";
