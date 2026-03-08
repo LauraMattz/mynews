@@ -12,7 +12,7 @@
 
 [**🔗 Acessar App**](https://mynews.lovable.app) · [**📝 Criado por Laura Mattos**](https://www.linkedin.com/in/lauramattosc/)
 
-</div>
+![MyNews — Dashboard de Triagem](public/images/screenshot-triagem.png)
 
 ---
 
