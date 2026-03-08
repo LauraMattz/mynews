@@ -160,25 +160,16 @@ ACEITE artigos que tenham conexão clara com pelo menos um dos 4 pilares, mesmo 
       }
     }
 
-    // Update articles in DB
-    let softDeleted = 0;
+    // Update articles in DB — no auto-deletion, user decides in triage
     for (const r of results) {
-      const updateData: Record<string, unknown> = {
+      await supabase.from("articles").update({
         ai_relevance_tags: r.tags,
         ai_relevance_score: r.score,
         ai_review_status: r.status,
-      };
-      
-      // Auto soft-delete rejected articles with score <= 2
-      if (r.status === "rejected" && r.score <= 2) {
-        updateData.is_deleted = true;
-        softDeleted++;
-      }
-
-      await supabase.from("articles").update(updateData).eq("id", r.id);
+      }).eq("id", r.id);
     }
 
-    console.log(`Classified ${results.length} articles, soft-deleted ${softDeleted}`);
+    console.log(`Classified ${results.length} articles`);
 
     return new Response(
       JSON.stringify({
