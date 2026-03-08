@@ -21,8 +21,8 @@ function stripHtml(html: string): string {
 }
 
 function estimateReadingTime(text: string): number {
-  const words = text.split(/\s+/).length;
-  return Math.max(1, Math.ceil(words / 200));
+  const words = text.split(/\s+/).filter(w => w.length > 0).length;
+  return Math.max(1, Math.ceil(words / 130));
 }
 
 function CopyButton({ text }: { text: string }) {
