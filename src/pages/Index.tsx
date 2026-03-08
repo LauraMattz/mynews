@@ -17,6 +17,7 @@ import {
   Inbox, SlidersHorizontal,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -92,6 +93,7 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <ThemeToggle />
               <Button
                 variant="outline"
                 size="sm"
