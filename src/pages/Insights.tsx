@@ -331,16 +331,16 @@ export default function Insights() {
             </CardContent>
           </Card>
 
-          {/* Top AI scored */}
+          {/* Longest summaries */}
           <Card>
             <CardHeader className="p-3 sm:p-4 pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                Maior score IA
+                <FileText className="h-4 w-4 text-primary" />
+                Resumos mais completos
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0 space-y-2">
-              {stats.topAI.map((a, i) => (
+              {stats.topLongest.map((a, i) => (
                 <a
                   key={a.id}
                   href={a.link}
@@ -354,11 +354,7 @@ export default function Insights() {
                       {a.title}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-[9px] font-mono font-bold ${
-                        (a.ai_relevance_score || 0) >= 7 ? "text-emerald-600" : "text-amber-600"
-                      }`}>
-                        IA: {a.ai_relevance_score || 0}/10
-                      </span>
+                      <Badge variant="outline" className="text-[9px] py-0 px-1">{a.wordCount} palavras</Badge>
                       {a.source_name && (
                         <span className="text-[9px] text-muted-foreground">{a.source_name}</span>
                       )}
