@@ -133,7 +133,7 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
             disabled={isSummarizing || exiting !== null}
           >
             <ThumbsUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            Aprovar
+            Aprovar + Resumir
           </Button>
           <Button
             variant="outline"
@@ -144,16 +144,6 @@ export function TriageCard({ article, selected, onToggleSelect, onApprove, onRej
           >
             <ThumbsDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             Descartar
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1 text-[11px] sm:text-xs h-7 sm:h-8 px-2 ml-auto"
-            onClick={() => onGenerateSummary(article.id)}
-            disabled={isSummarizing}
-          >
-            <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-            Resumir
           </Button>
         </div>
       </CardContent>
