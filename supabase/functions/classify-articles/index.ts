@@ -17,7 +17,7 @@ serve(async (req) => {
       const body = await req.json();
       articleIds = body?.articleIds;
     } catch {
-      // No body or invalid JSON — classify all pending
+      // No body or invalid JSON provided — will classify all pending articles
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
