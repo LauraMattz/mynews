@@ -143,6 +143,36 @@ const Index = () => {
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <ThemeToggle />
+              <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1 h-8 px-2 sm:px-3">
+                    <Link2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Link</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Link2 className="h-4 w-4 text-primary" />
+                      Colar link e gerar resumo
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      placeholder="Cole o link aqui..."
+                      value={linkInput}
+                      onChange={(e) => setLinkInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handlePasteLink()}
+                      disabled={isGenerating}
+                      className="h-9 text-sm"
+                    />
+                    <Button onClick={handlePasteLink} disabled={isGenerating || !linkInput.trim()} className="h-9 px-3 shrink-0">
+                      {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      <span className="ml-1">Gerar</span>
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button
                 onClick={fetchNews}
                 disabled={isFetching}
