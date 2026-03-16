@@ -31,6 +31,7 @@ export function useArticles() {
         .from("articles")
         .select("*, feeds(name, topic_id, topics(name)), votes(vote)")
         .eq("is_deleted", false)
+        .in("ai_review_status", ["approved", "pending"])
         .order("recommendation_score", { ascending: false })
         .limit(200);
       if (error) throw error;
