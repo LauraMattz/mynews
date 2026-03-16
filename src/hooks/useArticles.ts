@@ -175,6 +175,16 @@ export function useArticles() {
         });
       }
 
+      // Auto-classify new articles via AI
+      if (inserted > 0) {
+        setFetchProgress({ stage: "saving", message: "Classificando artigos com IA...", percent: 90 });
+        try {
+          await supabase.functions.invoke("classify-articles", { body: {} });
+        } catch (classifyErr) {
+          console.warn("Auto-classify failed:", classifyErr);
+        }
+      }
+
       setFetchProgress({ stage: "done", message: "Concluído!", percent: 100 });
       queryClient.invalidateQueries({ queryKey: ["articles"] });
       queryClient.invalidateQueries({ queryKey: ["triage-articles"] });
