@@ -31,6 +31,7 @@ export function useArticles() {
         .from("articles")
         .select("*, feeds(name, topic_id, topics(name)), votes(vote)")
         .eq("is_deleted", false)
+        .in("ai_review_status", ["approved", "pending"])
         .order("recommendation_score", { ascending: false })
         .limit(200);
       if (error) throw error;
@@ -173,6 +174,16 @@ export function useArticles() {
           message: `Salvando artigos... (${Math.min(i + batchSize, finalArticles.length)}/${finalArticles.length})`,
           percent: 70 + ((i / finalArticles.length) * 25),
         });
+      }
+
+      // Auto-classify new articles via AI
+      if (inserted > 0) {
+        setFetchProgress({ stage: "saving", message: "Classificando artigos com IA...", percent: 90 });
+        try {
+          await supabase.functions.invoke("classify-articles", { body: {} });
+        } catch (classifyErr) {
+          console.warn("Auto-classify failed:", classifyErr);
+        }
       }
 
       setFetchProgress({ stage: "done", message: "Concluído!", percent: 100 });
