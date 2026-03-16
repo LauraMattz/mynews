@@ -1,0 +1,1 @@
+DELETE FROM filter_terms WHERE type = 'relevance' AND term IN ('acesso', 'dados', 'digital', 'governo', 'inovação', 'tecnologia', 'trabalho');
