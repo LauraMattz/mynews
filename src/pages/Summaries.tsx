@@ -5,15 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Sparkles, ExternalLink, Link2, Loader2, Send,
-  Calendar, Search, Copy, Check, Trash2,
+  Calendar, Search, Copy, Check, Trash2, X,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { format } from "date-fns";
+import { format, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 function stripHtml(html: string): string {
   const doc = new DOMParser().parseFromString(html, "text/html");
@@ -68,6 +70,8 @@ export default function Summaries() {
   const [filterNewsletter, setFilterNewsletter] = useState<"all" | "sent" | "unsent">("all");
   const [filterPillar, setFilterPillar] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
   const { data: articles, isLoading } = useQuery({
     queryKey: ["summarized-articles"],
@@ -107,6 +111,7 @@ export default function Summaries() {
     if (!linkInput.trim()) return;
     setIsGenerating(true);
     try {
+      // Insert with placeholder title
       const { data: inserted, error: insertErr } = await supabase
         .from("articles")
         .upsert(
@@ -118,19 +123,31 @@ export default function Summaries() {
 
       if (insertErr) throw insertErr;
 
+      // Pass URL so edge function can fetch real title/content
       const { data, error } = await supabase.functions.invoke("summarize-news", {
         body: {
           articles: [
-            { id: inserted.id, title: inserted.title, description: inserted.description || linkInput },
+            {
+              id: inserted.id,
+              title: inserted.title,
+              description: inserted.description || "",
+              url: linkInput.trim(),
+            },
           ],
         },
       });
 
       if (error) throw error;
       if (data.summaries?.length > 0) {
+        const s = data.summaries[0];
+        const updateFields: Record<string, any> = { summary: s.summary };
+        // If the edge function extracted a real title, update it
+        if (s.title) {
+          updateFields.title = s.title;
+        }
         await supabase
           .from("articles")
-          .update({ summary: data.summaries[0].summary })
+          .update(updateFields)
           .eq("id", inserted.id);
       }
 
@@ -161,6 +178,20 @@ export default function Summaries() {
       list = list.filter(a => (a.ai_relevance_tags || []).includes(filterPillar));
     }
 
+    if (dateFrom) {
+      list = list.filter(a => {
+        const d = a.created_at ? new Date(a.created_at) : null;
+        return d && !isBefore(d, startOfDay(dateFrom));
+      });
+    }
+
+    if (dateTo) {
+      list = list.filter(a => {
+        const d = a.created_at ? new Date(a.created_at) : null;
+        return d && !isAfter(d, endOfDay(dateTo));
+      });
+    }
+
     if (search) {
       const s = search.toLowerCase();
       list = list.filter(a =>
@@ -171,7 +202,7 @@ export default function Summaries() {
     }
 
     return list;
-  }, [allArticles, filterNewsletter, filterPillar, search]);
+  }, [allArticles, filterNewsletter, filterPillar, search, dateFrom, dateTo]);
 
   const pillarStats = useMemo(() => {
     const stats: Record<string, number> = {};
@@ -182,6 +213,8 @@ export default function Summaries() {
     }
     return stats;
   }, [allArticles]);
+
+  const hasDateFilter = dateFrom || dateTo;
 
   return (
     <div className="min-h-screen bg-background">
@@ -245,7 +278,7 @@ export default function Summaries() {
         </Card>
 
         {/* Filters */}
-        <div className="space-y-2 sm:space-y-0 sm:flex sm:flex-row sm:gap-3">
+        <div className="space-y-2 sm:space-y-0 sm:flex sm:flex-row sm:gap-3 sm:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -255,6 +288,67 @@ export default function Summaries() {
               className="pl-9 h-9 text-sm"
             />
           </div>
+
+          {/* Date filter */}
+          <div className="flex items-center gap-1.5">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={dateFrom ? "default" : "outline"}
+                  size="sm"
+                  className="h-9 gap-1.5 text-xs px-2.5"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  {dateFrom ? format(dateFrom, "dd/MM", { locale: ptBR }) : "De"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={dateFrom}
+                  onSelect={setDateFrom}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={dateTo ? "default" : "outline"}
+                  size="sm"
+                  className="h-9 gap-1.5 text-xs px-2.5"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  {dateTo ? format(dateTo, "dd/MM", { locale: ptBR }) : "Até"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={dateTo}
+                  onSelect={setDateTo}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {hasDateFilter && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 px-1.5"
+                onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+
           <div className="flex items-center gap-1">
             {(["all", "unsent", "sent"] as const).map((f) => (
               <Button
